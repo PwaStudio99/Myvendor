@@ -1,0 +1,2526 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MY VENDOR — Sales Management</title>
+  
+  <!-- PWA & Mobile Web App Meta Tags -->
+  <meta name="theme-color" content="#f43f5e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MY VENDOR">
+  <meta name="description" content="Simple, elegant sales management and vendor tracking PWA">
+
+  <!-- Inter Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- External CDN Libraries for Chart and PDF Generation -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+  <!-- ============================================================
+       FIREBASE SDK (Modular v10)
+       ============================================================ -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAnalytics, isSupported as analyticsIsSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+    import {
+      getDatabase, ref, set, get, child, onValue, update, remove, push
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import {
+      getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+      signOut, onAuthStateChanged, updateProfile, sendPasswordResetEmail
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBiRyB1jkNRFzdU1dokPnI0tCvns0Atngk",
+      authDomain: "myvendor-35c87.firebaseapp.com",
+      databaseURL: "https://myvendor-35c87-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "myvendor-35c87",
+      storageBucket: "myvendor-35c87.firebasestorage.app",
+      messagingSenderId: "752136792617",
+      appId: "1:752136792617:web:d53500d84ac63e0cba0a38",
+      measurementId: "G-K0HFMZY1Z7"
+    };
+
+    try {
+      const app = initializeApp(firebaseConfig);
+
+      let analytics = null;
+      try {
+        if (await analyticsIsSupported()) {
+          analytics = getAnalytics(app);
+        }
+      } catch (e) {
+        console.warn('[Firebase] Analytics not available:', e);
+      }
+
+      const db = getDatabase(app);
+      const auth = getAuth(app);
+
+      window.Firebase = {
+        app, analytics, db, auth,
+        ref, set, get, child, onValue, update, remove, push,
+        signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut,
+        onAuthStateChanged, updateProfile, sendPasswordResetEmail,
+        config: firebaseConfig
+      };
+
+      console.log('%c🔥 Firebase initialized', 'color:#f43f5e;font-weight:bold;', firebaseConfig.projectId);
+      window.dispatchEvent(new CustomEvent('firebase-ready'));
+    } catch (err) {
+      console.error('[Firebase] Initialization failed:', err);
+      window.dispatchEvent(new CustomEvent('firebase-error', { detail: err }));
+    }
+  </script>
+
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 50%, #fecdd3 100%);
+      --card-bg: rgba(255, 255, 255, 0.78);
+      --card-border: rgba(255, 255, 255, 0.85);
+      --glass-shadow: 0 10px 30px -5px rgba(244, 63, 94, 0.12), 0 4px 12px -2px rgba(225, 29, 72, 0.06);
+      --primary: #f43f5e;
+      --primary-hover: #e11d48;
+      --primary-dark: #9f1239;
+      --primary-light: #fff1f2;
+      --primary-soft: rgba(244, 63, 94, 0.12);
+      --accent: #fb7185;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --text-light: #94a3b8;
+      --border-subtle: rgba(244, 63, 94, 0.15);
+      --success: #10b981;
+      --success-soft: rgba(16, 185, 129, 0.12);
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --danger-soft: rgba(239, 68, 68, 0.12);
+      --radius-sm: 10px;
+      --radius-md: 16px;
+      --radius-lg: 24px;
+      --radius-full: 9999px;
+      --nav-height: 68px;
+      --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-family); -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding-bottom: calc(var(--nav-height) + 40px);
+    }
+
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--glass-shadow);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .glass-card:hover { box-shadow: 0 14px 34px -4px rgba(244, 63, 94, 0.16); }
+
+    .app-container { max-width: 980px; margin: 0 auto; padding: 16px; }
+
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 20px;
+      margin-bottom: 20px;
+      border-radius: var(--radius-md);
+    }
+
+    .brand-wrap { display: flex; align-items: center; gap: 12px; }
+
+    .brand-icon {
+      width: 42px; height: 42px; border-radius: 12px;
+      background: linear-gradient(135deg, #f43f5e, #be123c);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 20px; font-weight: 800;
+      box-shadow: 0 4px 12px rgba(244, 63, 94, 0.35);
+    }
+
+    .brand-title {
+      font-size: 20px; font-weight: 800; letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #9f1239, #f43f5e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-subtitle {
+      font-size: 11px; color: var(--text-muted); font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+
+    .cloud-status {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 9px; border-radius: var(--radius-full);
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.4px;
+      background: rgba(148, 163, 184, 0.14);
+      color: var(--text-muted);
+      transition: all 0.35s ease;
+      cursor: default; user-select: none;
+    }
+    .cloud-status .cloud-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #94a3b8;
+      transition: background 0.3s ease;
+    }
+    .cloud-status[data-state="connecting"] .cloud-dot { background: #f59e0b; animation: cloudPulse 1.4s infinite; }
+    .cloud-status[data-state="syncing"]    .cloud-dot { background: #fb7185; animation: cloudPulse 1s infinite; }
+    .cloud-status[data-state="synced"]     { background: rgba(16, 185, 129, 0.14); color: #059669; }
+    .cloud-status[data-state="synced"] .cloud-dot { background: #10b981; }
+    .cloud-status[data-state="offline"]    { background: rgba(239, 68, 68, 0.12); color: #dc2626; }
+    .cloud-status[data-state="offline"] .cloud-dot { background: #ef4444; }
+
+    @keyframes cloudPulse {
+      0%   { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.6); }
+      70%  { box-shadow: 0 0 0 7px rgba(244, 63, 94, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
+    }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 10px 18px; border-radius: var(--radius-sm);
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      border: none; transition: all 0.2s ease; text-decoration: none;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #f43f5e, #e11d48);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(244, 63, 94, 0.35);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, #e11d48, #be123c);
+      box-shadow: 0 6px 18px rgba(244, 63, 94, 0.45);
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+    }
+    .btn-secondary:hover { background: #fff; border-color: var(--primary); }
+    .btn-soft { background: var(--primary-soft); color: var(--primary); }
+    .btn-soft:hover { background: rgba(244, 63, 94, 0.2); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-icon { width: 36px; height: 36px; padding: 0; border-radius: 10px; }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .metric-card { padding: 18px; position: relative; overflow: hidden; }
+    .metric-card::after {
+      content: ''; position: absolute; top: -20px; right: -20px;
+      width: 70px; height: 70px;
+      background: radial-gradient(circle, rgba(244,63,94,0.15) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .metric-label {
+      font-size: 12px; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+    }
+    .metric-value { font-size: 24px; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; }
+    .metric-sub { font-size: 11px; color: var(--text-light); margin-top: 4px; font-weight: 500; }
+
+    .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .section-title {
+      font-size: 17px; font-weight: 700; color: var(--text-main);
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+    @media (min-width: 768px) { .dashboard-grid { grid-template-columns: 1.6fr 1fr; } }
+
+    .table-container { overflow-x: auto; border-radius: var(--radius-sm); }
+    .custom-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+    .custom-table th {
+      background: rgba(254, 205, 211, 0.35);
+      color: var(--primary-dark); font-weight: 700;
+      text-align: left; padding: 12px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .custom-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(244, 63, 94, 0.08);
+      background: rgba(255, 255, 255, 0.4);
+    }
+    .custom-table tr:hover td { background: rgba(255, 255, 255, 0.85); }
+
+    .badge {
+      display: inline-flex; align-items: center;
+      padding: 4px 9px; border-radius: var(--radius-full);
+      font-size: 11px; font-weight: 700;
+    }
+    .badge-active { background: var(--success-soft); color: var(--success); }
+    .badge-inactive { background: var(--danger-soft); color: var(--danger); }
+    .badge-method { background: var(--primary-soft); color: var(--primary); }
+
+    /* ============ GLASS TAB BAR ============ */
+    .floating-nav {
+      position: fixed; bottom: 16px; left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 32px); max-width: 480px;
+      height: var(--nav-height); padding: 8px 10px;
+      display: flex; align-items: center; justify-content: space-between; gap: 2px;
+      border-radius: 34px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0%, rgba(255, 255, 255, 0.62) 100%);
+      backdrop-filter: blur(24px) saturate(190%);
+      -webkit-backdrop-filter: blur(24px) saturate(190%);
+      border: 1px solid rgba(255, 255, 255, 0.92);
+      box-shadow:
+        0 18px 40px -10px rgba(244, 63, 94, 0.30),
+        0 6px 16px -6px rgba(159, 18, 57, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 0.98),
+        inset 0 -1px 0 rgba(244, 63, 94, 0.07);
+      z-index: 999; isolation: isolate;
+    }
+    .floating-nav::before {
+      content: ''; position: absolute; inset: 0; border-radius: inherit;
+      background: radial-gradient(130% 90% at 50% -30%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0) 62%);
+      pointer-events: none; z-index: 0;
+    }
+    .nav-indicator {
+      position: absolute; top: 8px; left: 0; height: calc(100% - 16px);
+      width: 60px; border-radius: 22px;
+      background: linear-gradient(135deg, rgba(244, 63, 94, 0.17) 0%, rgba(251, 113, 133, 0.09) 100%);
+      border: 1px solid rgba(244, 63, 94, 0.20);
+      box-shadow: 0 8px 18px -8px rgba(244, 63, 94, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.80);
+      opacity: 0; pointer-events: none; z-index: 1;
+      will-change: transform, width;
+      transition: transform 0.52s var(--spring), width 0.52s var(--spring), opacity 0.25s ease;
+    }
+    .nav-item {
+      position: relative; z-index: 2; flex: 1 1 0;
+      min-width: 0; height: 100%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; background: none; border: none; padding: 0; cursor: pointer;
+      color: var(--text-light); font-family: var(--font-family);
+      font-size: 10px; font-weight: 700; letter-spacing: 0.2px;
+      transition: color 0.35s ease;
+    }
+    .nav-item .nav-icon {
+      width: 22px; height: 22px; display: block;
+      transition: transform 0.5s var(--spring), filter 0.35s ease;
+    }
+    .nav-item .nav-icon svg { width: 100%; height: 100%; display: block; }
+    .nav-item .nav-label {
+      line-height: 12px; white-space: nowrap; opacity: 0.72;
+      transition: opacity 0.3s ease, transform 0.5s var(--spring);
+    }
+    .nav-item.active { color: var(--primary); }
+    .nav-item.active .nav-icon {
+      transform: translateY(-1px) scale(1.14);
+      filter: drop-shadow(0 3px 7px rgba(244, 63, 94, 0.38));
+    }
+    .nav-item.active .nav-label { opacity: 1; transform: translateY(0); }
+    .nav-item:not(.active):active .nav-icon { transform: scale(0.86); }
+    .nav-item:not(.active):hover .nav-icon { transform: translateY(-2px); }
+
+    .nav-add-btn {
+      flex: 0 0 50px; width: 50px; height: 50px;
+      border-radius: 50%; color: #fff; overflow: hidden;
+      background: linear-gradient(135deg, #fb7185 0%, #f43f5e 45%, #be123c 100%);
+      box-shadow:
+        0 10px 22px -6px rgba(244, 63, 94, 0.70),
+        0 3px 8px rgba(190, 18, 60, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.50),
+        inset 0 -2px 8px rgba(159, 18, 57, 0.28);
+      transition: transform 0.38s var(--spring), box-shadow 0.35s ease;
+    }
+    .nav-add-btn .nav-icon {
+      width: 24px; height: 24px;
+      position: relative; z-index: 1;
+      transition: transform 0.45s var(--spring);
+    }
+    .nav-add-btn::after {
+      content: ''; position: absolute; inset: 0; border-radius: inherit;
+      background: radial-gradient(62% 62% at 32% 22%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 72%);
+      pointer-events: none;
+    }
+    .nav-add-btn:hover {
+      transform: translateY(-3px) scale(1.06);
+      box-shadow:
+        0 14px 26px -6px rgba(244, 63, 94, 0.78),
+        0 4px 10px rgba(190, 18, 60, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    }
+    .nav-add-btn:hover .nav-icon { transform: rotate(90deg); }
+    .nav-add-btn:active { transform: translateY(0) scale(0.9); }
+
+    @media (prefers-reduced-motion: reduce) {
+      .floating-nav *, .floating-nav { transition-duration: 0.01ms !important; }
+    }
+
+    .form-group { margin-bottom: 14px; }
+    .form-label {
+      display: block; font-size: 12px; font-weight: 600;
+      color: var(--text-muted); margin-bottom: 5px;
+    }
+    .form-control {
+      width: 100%; padding: 11px 14px;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-main); font-size: 14px; outline: none;
+      transition: border 0.2s ease, box-shadow 0.2s ease;
+    }
+    .form-control:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.18);
+      background: #fff;
+    }
+
+    .search-bar-wrap { position: relative; margin-bottom: 16px; }
+    .search-bar-wrap input { padding-left: 38px; }
+    .search-icon {
+      position: absolute; left: 12px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-light); font-size: 16px; pointer-events: none;
+    }
+
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(30, 41, 59, 0.4);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 16px; z-index: 10000;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    .modal-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(24px);
+      border: 1px solid #fff;
+      border-radius: var(--radius-lg);
+      width: 100%; max-width: 520px;
+      max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 25px 50px -12px rgba(244, 63, 94, 0.25);
+      transform: scale(0.94);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: 22px;
+    }
+    .modal-overlay.active .modal-container { transform: scale(1); }
+    .modal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 18px; padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .modal-title { font-size: 18px; font-weight: 800; color: var(--text-main); }
+    .close-btn {
+      background: none; border: none; font-size: 20px;
+      cursor: pointer; color: var(--text-muted);
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .close-btn:hover { background: var(--primary-soft); color: var(--primary); }
+
+    .toast-container {
+      position: fixed; top: 20px; right: 20px; z-index: 100000;
+      display: flex; flex-direction: column; gap: 10px;
+      pointer-events: none;
+    }
+    .toast {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border-left: 4px solid var(--primary);
+      padding: 12px 18px; border-radius: var(--radius-sm);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      color: var(--text-main); font-size: 13px; font-weight: 600;
+      transform: translateX(100%); opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex; align-items: center; gap: 10px;
+      pointer-events: auto;
+    }
+    .toast.show { transform: translateX(0); opacity: 1; }
+
+    .empty-state { text-align: center; padding: 38px 20px; color: var(--text-muted); }
+    .empty-icon { font-size: 46px; margin-bottom: 12px; opacity: 0.8; }
+    .empty-title { font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 6px; }
+    .empty-desc { font-size: 13px; max-width: 300px; margin: 0 auto 16px; }
+
+    .page-section {
+      display: none;
+      animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .page-section.active { display: block; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    #auth-screen {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .auth-card { width: 100%; max-width: 400px; padding: 32px 26px; border-radius: var(--radius-lg); }
+
+    .auth-toggle-link {
+      color: var(--primary); font-weight: 700; text-decoration: none;
+      cursor: pointer;
+    }
+    .auth-toggle-link:hover { text-decoration: underline; }
+
+    .auth-error {
+      background: rgba(239, 68, 68, 0.10);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      color: #b91c1c;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 14px;
+      display: none;
+    }
+    .auth-error.show { display: block; }
+
+    @media (max-width: 640px) {
+      .custom-table, .custom-table thead, .custom-table tbody,
+      .custom-table th, .custom-table td, .custom-table tr { display: block; }
+      .custom-table thead tr { position: absolute; top: -9999px; left: -9999px; }
+      .custom-table tr {
+        border-radius: var(--radius-sm);
+        background: rgba(255, 255, 255, 0.7);
+        margin-bottom: 10px; padding: 12px;
+        border: 1px solid var(--border-subtle);
+      }
+      .custom-table td {
+        border: none; padding: 6px 0;
+        display: flex; justify-content: space-between; align-items: center;
+        background: transparent !important;
+      }
+      .custom-table td::before {
+        content: attr(data-label);
+        font-weight: 700; color: var(--text-muted); font-size: 11px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- ============ AUTH SCREEN (Production) ============ -->
+  <div id="auth-screen">
+    <div class="glass-card auth-card">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div class="brand-icon" style="margin: 0 auto 12px; width: 56px; height: 56px; font-size: 26px;">🏪</div>
+        <h1 class="brand-title" style="font-size: 24px;">MY VENDOR</h1>
+        <p class="brand-subtitle">Smart Vendor & Sales Hub</p>
+      </div>
+
+      <form id="login-form" autocomplete="on">
+        <div id="auth-error-box" class="auth-error"></div>
+
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" id="login-email" class="form-control"
+                 placeholder="name@company.com" required
+                 autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" id="login-password" class="form-control"
+                 placeholder="Minimum 6 characters" required minlength="6"
+                 autocomplete="current-password">
+        </div>
+
+        <div id="confirm-password-group" class="form-group" style="display: none;">
+          <label class="form-label">Confirm Password</label>
+          <input type="password" id="login-password-confirm" class="form-control"
+                 placeholder="Re-enter password" minlength="6"
+                 autocomplete="new-password">
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 12px;">
+          <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text-muted);">
+            <input type="checkbox" id="login-remember" checked style="accent-color: var(--primary);"> Remember Me
+          </label>
+          <a href="#" id="forgot-password-link" class="auth-toggle-link" style="font-size: 12px;">Lupa Password?</a>
+        </div>
+
+        <button type="submit" id="login-btn" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 15px;">
+          <span id="login-btn-text">Sign In</span>
+        </button>
+      </form>
+
+      <div style="margin-top: 18px; text-align: center; font-size: 13px; color: var(--text-muted);">
+        <span id="auth-toggle-text">Belum ada akaun?</span>
+        <a href="#" id="auth-toggle-link" class="auth-toggle-link" style="margin-left: 4px;">Daftar Sekarang</a>
+      </div>
+
+      <div style="margin-top: 16px; text-align: center; font-size: 10px; color: var(--text-light);">
+        🔒 Secured by Firebase Authentication
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ APP SHELL ============ -->
+  <div id="app-shell" style="display: none;">
+    <div class="app-container">
+      
+      <header class="glass-card app-header">
+        <div class="brand-wrap">
+          <div class="brand-icon">🏪</div>
+          <div>
+            <div class="brand-title">MY VENDOR</div>
+            <div class="brand-subtitle" id="top-business-name">Outlet Sales Network</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="cloud-status" id="cloud-status" data-state="connecting" title="Cloud Sync Status">
+            <span class="cloud-dot"></span>
+            <span id="cloud-text">Cloud</span>
+          </span>
+          <button class="btn btn-soft btn-icon" id="quick-add-btn" title="Quick Add Sale">➕</button>
+          <button class="btn btn-secondary btn-icon" id="header-logout-btn" title="Sign Out">🚪</button>
+        </div>
+      </header>
+
+      <main id="page-home" class="page-section active">
+        <div class="metrics-grid">
+          <div class="glass-card metric-card">
+            <div class="metric-label">📅 Today's Sales</div>
+            <div class="metric-value" id="metric-today-sales">RM 0.00</div>
+            <div class="metric-sub" id="metric-today-tx">0 transactions</div>
+          </div>
+          <div class="glass-card metric-card">
+            <div class="metric-label">📊 This Week</div>
+            <div class="metric-value" id="metric-week-sales">RM 0.00</div>
+            <div class="metric-sub" id="metric-week-tx">0 transactions</div>
+          </div>
+          <div class="glass-card metric-card">
+            <div class="metric-label">🗓️ This Month</div>
+            <div class="metric-value" id="metric-month-sales">RM 0.00</div>
+            <div class="metric-sub" id="metric-month-tx">0 transactions</div>
+          </div>
+          <div class="glass-card metric-card">
+            <div class="metric-label">🏪 Total Vendors</div>
+            <div class="metric-value" id="metric-total-vendors">0</div>
+            <div class="metric-sub" id="metric-active-vendors">0 Active outlets</div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div>
+            <div class="glass-card" style="padding: 18px; margin-bottom: 20px;">
+              <div class="section-head">
+                <h2 class="section-title">📈 7-Day Sales Trend</h2>
+                <span style="font-size: 12px; color: var(--text-muted);" id="chart-date-range">Recent activity</span>
+              </div>
+              <div style="position: relative; height: 220px; width: 100%;">
+                <canvas id="salesTrendChart"></canvas>
+              </div>
+            </div>
+
+            <div class="glass-card" style="padding: 18px;">
+              <div class="section-head">
+                <h2 class="section-title">⚡ Today's & Recent Sales</h2>
+                <button class="btn btn-soft" id="goto-all-sales-btn" style="padding: 4px 10px; font-size: 12px;">View All</button>
+              </div>
+              <div class="table-container">
+                <table class="custom-table" id="dashboard-recent-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th><th>Vendor</th><th>Item</th><th>Qty</th><th>Total</th><th>Payment</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashboard-recent-tbody"></tbody>
+                </table>
+              </div>
+              <div id="dashboard-sales-empty" class="empty-state" style="display: none;">
+                <div class="empty-icon">📝</div>
+                <div class="empty-title">No sales recorded yet</div>
+                <p class="empty-desc">Record your first outlet sale to populate the live dashboard.</p>
+                <button class="btn btn-primary" onclick="window.App.openSaleModal()">+ Add First Sale</button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="glass-card" style="padding: 18px; margin-bottom: 20px;">
+              <div class="section-head">
+                <h2 class="section-title">🏆 Top Vendors by Sales</h2>
+              </div>
+              <div id="top-vendors-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+            </div>
+
+            <div class="glass-card" style="padding: 18px;">
+              <div class="section-head">
+                <h2 class="section-title">💡 Quick Export</h2>
+              </div>
+              <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
+                Generate instantaneous PDF statements for audit and record keeping.
+              </p>
+              <button class="btn btn-primary" style="width: 100%; margin-bottom: 8px;" onclick="window.App.openReportsTab()">
+                📑 Generate Monthly PDF
+              </button>
+              <button class="btn btn-secondary" style="width: 100%;" onclick="window.App.openVendorsTab()">
+                🏪 Browse Vendors & Reports
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <section id="page-vendors" class="page-section">
+        <div class="glass-card" style="padding: 18px;">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">🏪 Vendor & Outlet Directory</h2>
+              <span style="font-size: 12px; color: var(--text-muted);">Manage suppliers, retail partners, and distribution points</span>
+            </div>
+            <button class="btn btn-primary" onclick="window.App.openVendorModal()">+ Add Vendor</button>
+          </div>
+
+          <div class="search-bar-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="vendor-search-input" class="form-control" placeholder="Search by vendor name, location, or contact...">
+          </div>
+
+          <div id="vendors-card-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px;"></div>
+
+          <div id="vendors-empty" class="empty-state" style="display: none;">
+            <div class="empty-icon">🏪</div>
+            <div class="empty-title">No vendors found</div>
+            <p class="empty-desc">Add your first vendor outlet to start recording deliveries and sales.</p>
+            <button class="btn btn-primary" onclick="window.App.openVendorModal()">+ Add Vendor</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-vendor-detail" class="page-section">
+        <div class="glass-card" style="padding: 18px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px; margin-bottom: 10px;" onclick="window.App.showPage('vendors')">
+                ← Back to Vendors
+              </button>
+              <h1 class="brand-title" id="vd-name" style="font-size: 24px;">—</h1>
+              <div style="font-size: 13px; color: var(--text-muted); display: flex; gap: 16px; margin-top: 4px; flex-wrap: wrap;">
+                <span>📍 <span id="vd-location">—</span></span>
+                <span>📞 <span id="vd-phone">—</span></span>
+                <span>👤 <span id="vd-contact">—</span></span>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-primary" id="vd-export-pdf-btn">📄 Export Vendor PDF</button>
+              <button class="btn btn-secondary" id="vd-add-sale-btn">➕ Add Sale</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="metrics-grid">
+          <div class="glass-card metric-card">
+            <div class="metric-label">💰 Lifetime Sales</div>
+            <div class="metric-value" id="vd-total-sales">RM 0.00</div>
+          </div>
+          <div class="glass-card metric-card">
+            <div class="metric-label">🗓️ This Month</div>
+            <div class="metric-value" id="vd-month-sales">RM 0.00</div>
+          </div>
+          <div class="glass-card metric-card">
+            <div class="metric-label">📦 Total Items Sold</div>
+            <div class="metric-value" id="vd-total-qty">0 units</div>
+          </div>
+          <div class="glass-card metric-card">
+            <div class="metric-label">🧾 Total Transactions</div>
+            <div class="metric-value" id="vd-total-tx">0</div>
+          </div>
+        </div>
+
+        <div class="glass-card" style="padding: 18px;">
+          <div class="section-head">
+            <h2 class="section-title">📜 Sales History for this Vendor</h2>
+          </div>
+          <div class="table-container">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Date</th><th>Product</th><th>Quantity</th><th>Unit Price</th><th>Total Amount</th><th>Payment</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="vendor-sales-tbody"></tbody>
+            </table>
+          </div>
+          <div id="vendor-sales-empty" class="empty-state" style="display: none;">
+            <div class="empty-icon">📦</div>
+            <div class="empty-title">No transactions for this vendor</div>
+            <p class="empty-desc">Record a delivery or sale to see history.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-reports" class="page-section">
+        <div class="glass-card" style="padding: 18px; margin-bottom: 20px;">
+          <div class="section-head" style="flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h2 class="section-title">📊 Monthly Sales Reports</h2>
+              <span style="font-size: 12px; color: var(--text-muted);">Aggregate and audit performance by billing cycle</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <select id="report-month-select" class="form-control" style="width: auto; padding: 8px 12px; font-weight: 600;"></select>
+              <select id="report-year-select" class="form-control" style="width: auto; padding: 8px 12px; font-weight: 600;"></select>
+              <button class="btn btn-primary" id="export-monthly-pdf-btn">📑 Export Monthly PDF</button>
+            </div>
+          </div>
+
+          <div class="metrics-grid" style="margin-bottom: 18px;">
+            <div class="glass-card metric-card">
+              <div class="metric-label">💵 Total Monthly Sales</div>
+              <div class="metric-value" id="rep-total-sales">RM 0.00</div>
+            </div>
+            <div class="glass-card metric-card">
+              <div class="metric-label">🏪 Contributing Vendors</div>
+              <div class="metric-value" id="rep-total-vendors">0</div>
+            </div>
+            <div class="glass-card metric-card">
+              <div class="metric-label">🧾 Transactions</div>
+              <div class="metric-value" id="rep-total-tx">0</div>
+            </div>
+            <div class="glass-card metric-card">
+              <div class="metric-label">📦 Items Sold</div>
+              <div class="metric-value" id="rep-total-items">0</div>
+            </div>
+          </div>
+
+          <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 10px; color: var(--primary-dark);">Outlet Breakdown</h3>
+          <div class="table-container" style="margin-bottom: 24px;">
+            <table class="custom-table" id="report-breakdown-table">
+              <thead>
+                <tr>
+                  <th>Vendor Name</th><th>Location</th><th>Transactions</th><th>Total Qty</th><th>Total Sales (RM)</th><th>% of Month</th>
+                </tr>
+              </thead>
+              <tbody id="report-breakdown-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="glass-card" style="padding: 18px;">
+          <div class="section-head" style="flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h2 class="section-title">🔍 All Sales Transactions</h2>
+              <span style="font-size: 12px; color: var(--text-muted);">Search and filter complete transaction ledger</span>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 14px;">
+            <input type="text" id="sales-search-filter" class="form-control" placeholder="Search product or notes...">
+            <select id="sales-vendor-filter" class="form-control">
+              <option value="">All Vendors</option>
+            </select>
+            <input type="date" id="sales-date-filter" class="form-control">
+          </div>
+
+          <div class="table-container">
+            <table class="custom-table" id="master-sales-table">
+              <thead>
+                <tr>
+                  <th>Date</th><th>Vendor</th><th>Product</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Payment</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="master-sales-tbody"></tbody>
+            </table>
+          </div>
+          <div id="master-sales-empty" class="empty-state" style="display: none;">
+            <div class="empty-icon">🔍</div>
+            <div class="empty-title">No matching records found</div>
+            <p class="empty-desc">Try clearing filters or add a new transaction.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-settings" class="page-section">
+        <div class="glass-card" style="padding: 22px; max-width: 640px; margin: 0 auto;">
+          <h2 class="section-title" style="margin-bottom: 16px;">⚙️ App Settings & Data</h2>
+          
+          <div class="form-group">
+            <label class="form-label">Business / App Title</label>
+            <input type="text" id="setting-business-name" class="form-control" placeholder="Outlet Sales Network">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Default Currency</label>
+            <input type="text" class="form-control" value="MYR (RM) — Malaysian Ringgit" disabled>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Active User Session</label>
+            <input type="text" id="setting-user-email" class="form-control" disabled>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Cloud Sync (Firebase Realtime DB)</label>
+            <div style="display:flex; align-items:center; gap:10px; padding:10px 12px; background:rgba(244,63,94,0.06); border-radius:var(--radius-sm); font-size:12px;">
+              <span class="cloud-status" id="cloud-status-settings" data-state="connecting">
+                <span class="cloud-dot"></span>
+                <span>Connecting…</span>
+              </span>
+              <span style="color:var(--text-muted);" id="firebase-project-label">myvendor-35c87</span>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" id="save-settings-btn" style="margin-bottom: 24px;">Save Configuration</button>
+
+          <hr style="border: none; border-top: 1px solid var(--border-subtle); margin: 20px 0;">
+
+          <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 12px;">💾 Data Management (JSON Backup)</h3>
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">
+            Export all vendors and sales records as a clean JSON file, or restore from a previous backup.
+          </p>
+
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px;">
+            <button class="btn btn-secondary" id="export-json-btn">⬇️ Export JSON Backup</button>
+            <label class="btn btn-secondary" style="cursor: pointer; margin: 0;">
+              ⬆️ Import JSON File
+              <input type="file" id="import-json-input" accept=".json" style="display: none;">
+            </label>
+            <button class="btn btn-soft" id="sync-cloud-btn">☁️ Force Sync to Cloud</button>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid var(--border-subtle); margin: 20px 0;">
+
+          <h3 style="font-size: 15px; font-weight: 700; color: var(--danger); margin-bottom: 8px;">⚠️ Danger Zone</h3>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn btn-danger" id="clear-all-data-btn">🗑️ Clear All Stored Data</button>
+            <button class="btn btn-secondary" id="logout-btn">🚪 Logout Session</button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ===== GLASS TAB BAR ===== -->
+    <nav class="floating-nav" id="bottom-nav">
+      <span class="nav-indicator" aria-hidden="true"></span>
+
+      <button class="nav-item active" data-page="home" aria-label="Home">
+        <span class="nav-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3.5 10.2 12 3.4l8.5 6.8"/>
+            <path d="M5.6 9.3V19a1.4 1.4 0 0 0 1.4 1.4h3.1v-5.2h3.8v5.2H17a1.4 1.4 0 0 0 1.4-1.4V9.3"/>
+          </svg>
+        </span>
+        <span class="nav-label">Home</span>
+      </button>
+
+      <button class="nav-item" data-page="vendors" aria-label="Vendors">
+        <span class="nav-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3.6 9.4 5.2 4.6h13.6l1.6 4.8"/>
+            <path d="M4.7 9.4v9.2A1.4 1.4 0 0 0 6.1 20h11.8a1.4 1.4 0 0 0 1.4-1.4V9.4"/>
+            <path d="M9.4 20v-5.1h5.2V20"/>
+          </svg>
+        </span>
+        <span class="nav-label">Vendors</span>
+      </button>
+
+      <button class="nav-item nav-add-btn" id="nav-add-sale" aria-label="Record New Sale">
+        <span class="nav-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+            <path d="M12 5.5v13"/>
+            <path d="M5.5 12h13"/>
+          </svg>
+        </span>
+      </button>
+
+      <button class="nav-item" data-page="reports" aria-label="Reports">
+        <span class="nav-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4.6 19.4v-7.6"/>
+            <path d="M12 19.4V4.6"/>
+            <path d="M19.4 19.4v-4.8"/>
+          </svg>
+        </span>
+        <span class="nav-label">Reports</span>
+      </button>
+
+      <button class="nav-item" data-page="settings" aria-label="Settings">
+        <span class="nav-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 8h8.5"/>
+            <path d="M18 8h2"/>
+            <circle cx="15.2" cy="8" r="2.4"/>
+            <path d="M4 16h3.5"/>
+            <path d="M12.8 16H20"/>
+            <circle cx="9.9" cy="16" r="2.4"/>
+          </svg>
+        </span>
+        <span class="nav-label">Settings</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ============ MODALS ============ -->
+  <div class="modal-overlay" id="sale-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title" id="sale-modal-title">Record Daily Sale</h3>
+        <button class="close-btn" onclick="window.App.closeModal('sale-modal')">&times;</button>
+      </div>
+      <form id="sale-form">
+        <input type="hidden" id="sale-edit-id">
+        
+        <div class="form-group">
+          <label class="form-label">Select Vendor *</label>
+          <select id="sale-vendor-id" class="form-control" required></select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Sales Date *</label>
+          <input type="date" id="sale-date" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Product / Item *</label>
+          <input type="text" id="sale-product" class="form-control" placeholder="e.g. Product A" required list="product-suggestions">
+          <datalist id="product-suggestions">
+            <option value="Product A"><option value="Product B"><option value="Product C"><option value="Product Deluxe">
+          </datalist>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">Quantity *</label>
+            <input type="number" id="sale-qty" class="form-control" min="1" step="1" value="1" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Unit Price (RM) *</label>
+            <input type="number" id="sale-price" class="form-control" min="0.01" step="0.01" placeholder="5.00" required>
+          </div>
+        </div>
+
+        <div class="form-group" style="background: rgba(244, 63, 94, 0.08); padding: 12px; border-radius: var(--radius-sm);">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 700; font-size: 13px; color: var(--text-muted);">Calculated Total:</span>
+            <span id="sale-calc-total" style="font-size: 19px; font-weight: 800; color: var(--primary);">RM 0.00</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Payment Method</label>
+          <select id="sale-payment" class="form-control">
+            <option value="Cash">Cash</option>
+            <option value="QR">QR DuitNow</option>
+            <option value="Bank Transfer">Bank Transfer</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Notes (Optional)</label>
+          <input type="text" id="sale-notes" class="form-control" placeholder="Batch number, invoice ref, etc.">
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 15px;">
+          💾 Save Transaction
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="vendor-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title" id="vendor-modal-title">Add New Vendor</h3>
+        <button class="close-btn" onclick="window.App.closeModal('vendor-modal')">&times;</button>
+      </div>
+      <form id="vendor-form">
+        <input type="hidden" id="vendor-edit-id">
+
+        <div class="form-group">
+          <label class="form-label">Vendor / Outlet Name *</label>
+          <input type="text" id="vendor-name" class="form-control" placeholder="e.g. Kedai Maju Jaya" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">Contact Person</label>
+            <input type="text" id="vendor-contact" class="form-control" placeholder="e.g. En. Ahmad">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" id="vendor-phone" class="form-control" placeholder="012-3456789">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Location / Town *</label>
+          <input type="text" id="vendor-location" class="form-control" placeholder="e.g. Taiping, Perak" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Outlet Status</label>
+          <select id="vendor-status" class="form-control">
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Internal Notes</label>
+          <textarea id="vendor-notes" class="form-control" rows="2" placeholder="Payment terms, delivery days, etc."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 15px;">
+          💾 Save Vendor
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="confirm-modal">
+    <div class="modal-container" style="max-width: 380px; text-align: center;">
+      <div style="font-size: 42px; margin-bottom: 8px;" id="confirm-icon">⚠️</div>
+      <h3 class="modal-title" id="confirm-title" style="margin-bottom: 8px;">Are you sure?</h3>
+      <p id="confirm-msg" style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">This action cannot be undone.</p>
+      <div style="display: flex; gap: 10px; justify-content: center;">
+        <button class="btn btn-secondary" id="confirm-cancel-btn" style="flex: 1;">Cancel</button>
+        <button class="btn btn-danger" id="confirm-action-btn" style="flex: 1;">Proceed</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ============================================================
+       PWA Service Worker + Manifest
+       ============================================================ */
+    (function registerPWA() {
+      const manifest = {
+        name: "MY VENDOR Sales Management",
+        short_name: "MY VENDOR",
+        description: "Modern sales and outlet tracking Progressive Web App",
+        start_url: "./",
+        display: "standalone",
+        background_color: "#fff1f2",
+        theme_color: "#f43f5e",
+        icons: [{
+          src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='25' fill='%23f43f5e'/%3E%3Ctext x='50' y='65' font-size='50' font-family='sans-serif' text-anchor='middle' fill='%23ffffff'%3E%F0%9F%8F%AA%3C/text%3E%3C/svg%3E",
+          sizes: "192x192 512x512",
+          type: "image/svg+xml"
+        }]
+      };
+      const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+      const linkTag = document.createElement('link');
+      linkTag.rel = 'manifest';
+      linkTag.href = URL.createObjectURL(manifestBlob);
+      document.head.appendChild(linkTag);
+
+      if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+        const swScript = `
+          const CACHE_NAME = 'my-vendor-v3.0';
+          self.addEventListener('install', e => self.skipWaiting());
+          self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+          self.addEventListener('fetch', e => {
+            e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+          });
+        `;
+        const swBlob = new Blob([swScript], { type: 'application/javascript' });
+        navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+      }
+    })();
+
+    /* ============================================================
+       FIREBASE SERVICE
+       ============================================================ */
+    const FirebaseService = {
+      ready: false, db: null, ref: null, set: null, get: null,
+      child: null, onValue: null, auth: null, user: null,
+      ROOT: 'myvendor',
+
+      init() {
+        if (!window.Firebase) return false;
+        try {
+          this.db = window.Firebase.db;
+          this.ref = window.Firebase.ref;
+          this.set = window.Firebase.set;
+          this.get = window.Firebase.get;
+          this.child = window.Firebase.child;
+          this.onValue = window.Firebase.onValue;
+          this.auth = window.Firebase.auth;
+          this.ready = true;
+          console.log('[FirebaseService] Ready — project:', window.Firebase.config.projectId);
+          return true;
+        } catch (e) {
+          console.warn('[FirebaseService] Init failed:', e);
+          return false;
+        }
+      },
+
+      _path(sub) {
+        return this.user && this.user.uid
+          ? `${this.ROOT}/users/${this.user.uid}/${sub}`
+          : `${this.ROOT}/${sub}`;
+      },
+
+      async loadAll() {
+        if (!this.ready || !this.user || !this.user.uid) return null;
+        try {
+          const target = this.ref(this.db, `${this.ROOT}/users/${this.user.uid}`);
+          const snapshot = await this.get(target);
+          return snapshot.exists() ? snapshot.val() : null;
+        } catch (e) {
+          console.warn('[FirebaseService] loadAll failed:', e);
+          return null;
+        }
+      },
+
+      async saveVendors(vendors) {
+        if (!this.ready || !this.user) return false;
+        try { await this.set(this.ref(this.db, this._path('vendors')), vendors || []); return true; }
+        catch (e) { console.warn('[FirebaseService] saveVendors failed:', e); return false; }
+      },
+      async saveSales(sales) {
+        if (!this.ready || !this.user) return false;
+        try { await this.set(this.ref(this.db, this._path('sales')), sales || []); return true; }
+        catch (e) { console.warn('[FirebaseService] saveSales failed:', e); return false; }
+      },
+      async saveSettings(settings) {
+        if (!this.ready || !this.user) return false;
+        try { await this.set(this.ref(this.db, this._path('settings')), settings || {}); return true; }
+        catch (e) { console.warn('[FirebaseService] saveSettings failed:', e); return false; }
+      },
+
+      async clearAll() {
+        if (!this.ready || !this.user) return false;
+        try {
+          await this.set(this.ref(this.db, this._path('vendors')), []);
+          await this.set(this.ref(this.db, this._path('sales')), []);
+          return true;
+        } catch (e) { console.warn('[FirebaseService] clearAll failed:', e); return false; }
+      }
+    };
+
+    /* ============================================================
+       STORAGE SERVICE — localStorage + Firebase cloud
+       ============================================================ */
+    const StorageService = {
+      KEYS: {
+        AUTH: 'myvendor_auth_session',
+        VENDORS: 'myvendor_vendors_db',
+        SALES: 'myvendor_sales_db',
+        SETTINGS: 'myvendor_settings_db'
+      },
+
+      getAuth() { try { return JSON.parse(localStorage.getItem(this.KEYS.AUTH)); } catch (e) { return null; } },
+      setAuth(session) {
+        if (!session) localStorage.removeItem(this.KEYS.AUTH);
+        else localStorage.setItem(this.KEYS.AUTH, JSON.stringify(session));
+      },
+
+      getVendors() {
+        try { const d = localStorage.getItem(this.KEYS.VENDORS); return d ? JSON.parse(d) : []; }
+        catch (e) { return []; }
+      },
+      setVendors(list, pushToCloud = true) {
+        localStorage.setItem(this.KEYS.VENDORS, JSON.stringify(list));
+        if (pushToCloud && FirebaseService.ready && FirebaseService.user) {
+          FirebaseService.saveVendors(list).then(ok => { if (ok) App.setCloudStatus('synced'); });
+        }
+      },
+
+      getSales() {
+        try { const d = localStorage.getItem(this.KEYS.SALES); return d ? JSON.parse(d) : []; }
+        catch (e) { return []; }
+      },
+      setSales(list, pushToCloud = true) {
+        localStorage.setItem(this.KEYS.SALES, JSON.stringify(list));
+        if (pushToCloud && FirebaseService.ready && FirebaseService.user) {
+          FirebaseService.saveSales(list).then(ok => { if (ok) App.setCloudStatus('synced'); });
+        }
+      },
+
+      getSettings() {
+        try {
+          const d = localStorage.getItem(this.KEYS.SETTINGS);
+          return d ? JSON.parse(d) : { businessName: 'Outlet Sales Network', currency: 'RM' };
+        } catch (e) { return { businessName: 'Outlet Sales Network', currency: 'RM' }; }
+      },
+      setSettings(settings, pushToCloud = true) {
+        localStorage.setItem(this.KEYS.SETTINGS, JSON.stringify(settings));
+        if (pushToCloud && FirebaseService.ready && FirebaseService.user) {
+          FirebaseService.saveSettings(settings).then(ok => { if (ok) App.setCloudStatus('synced'); });
+        }
+      },
+
+      clearLocalData() {
+        localStorage.removeItem(this.KEYS.VENDORS);
+        localStorage.removeItem(this.KEYS.SALES);
+        localStorage.removeItem(this.KEYS.SETTINGS);
+      },
+
+      async syncFromFirebase() {
+        if (!FirebaseService.ready || !FirebaseService.user) return false;
+        const data = await FirebaseService.loadAll();
+        if (!data) return false;
+        let didSync = false;
+        if (Array.isArray(data.vendors)) { this.setVendors(data.vendors, false); didSync = true; }
+        if (Array.isArray(data.sales))   { this.setSales(data.sales, false);   didSync = true; }
+        if (data.settings && typeof data.settings === 'object') { this.setSettings(data.settings, false); }
+        return didSync;
+      }
+    };
+
+    /* ============================================================
+       APP
+       ============================================================ */
+    window.App = {
+      currentUser: null,
+      vendors: [],
+      sales: [],
+      settings: {},
+      selectedVendorId: null,
+      salesChartInstance: null,
+      firebaseUser: null,
+      authMode: 'signin', // 'signin' | 'signup'
+
+      async init() {
+        await this.waitForFirebase(5000);
+        this.wireFirebaseAuth();
+        this.setCloudStatus(FirebaseService.ready ? 'connecting' : 'offline');
+
+        this.vendors = StorageService.getVendors();
+        this.sales = StorageService.getSales();
+        this.settings = StorageService.getSettings();
+
+        this.bindEvents();
+        await this.checkAuthStatus();
+
+        const label = document.getElementById('firebase-project-label');
+        if (label && window.Firebase?.config?.projectId) {
+          label.textContent = window.Firebase.config.projectId;
+        }
+      },
+
+      waitForFirebase(timeoutMs = 5000) {
+        return new Promise(resolve => {
+          if (FirebaseService.init()) return resolve(true);
+          let done = false;
+          const finish = (ok) => { if (!done) { done = true; resolve(ok); } };
+          window.addEventListener('firebase-ready', () => { FirebaseService.init(); finish(true); }, { once: true });
+          window.addEventListener('firebase-error', () => finish(false), { once: true });
+          setTimeout(() => finish(FirebaseService.init()), timeoutMs);
+        });
+      },
+
+      wireFirebaseAuth() {
+        if (!FirebaseService.ready || !FirebaseService.auth) return;
+        try {
+          window.Firebase.onAuthStateChanged(FirebaseService.auth, (user) => {
+            this.firebaseUser = user;
+            FirebaseService.user = user;
+          });
+        } catch (e) {
+          console.warn('[Auth] onAuthStateChanged failed:', e);
+        }
+      },
+
+      setCloudStatus(state) {
+        const map = {
+          connecting: { text: 'Cloud',   label: 'Connecting…' },
+          syncing:    { text: 'Sync',    label: 'Syncing…' },
+          synced:     { text: 'Synced',  label: 'Synced' },
+          offline:    { text: 'Offline', label: 'Offline' }
+        };
+        const meta = map[state] || map.connecting;
+
+        const header = document.getElementById('cloud-status');
+        if (header) {
+          header.setAttribute('data-state', state);
+          const t = document.getElementById('cloud-text');
+          if (t) t.textContent = meta.text;
+        }
+        const settingsEl = document.getElementById('cloud-status-settings');
+        if (settingsEl) {
+          settingsEl.setAttribute('data-state', state);
+          const span = settingsEl.querySelector('span:not(.cloud-dot)');
+          if (span) span.textContent = meta.label;
+        }
+      },
+
+      /* ============================================================
+         AUTH — Firebase Auth only, no demo fallback
+         ============================================================ */
+      async checkAuthStatus() {
+        // Wait for Firebase Auth session restore
+        if (FirebaseService.ready && FirebaseService.auth && window.Firebase.onAuthStateChanged) {
+          const user = await new Promise((resolve) => {
+            let resolved = false;
+            const unsub = window.Firebase.onAuthStateChanged(FirebaseService.auth, (u) => {
+              if (resolved) return;
+              resolved = true;
+              try { unsub(); } catch (e) {}
+              resolve(u);
+            });
+            // Fallback timeout
+            setTimeout(() => {
+              if (resolved) return;
+              resolved = true;
+              resolve(FirebaseService.auth.currentUser);
+            }, 3000);
+          });
+
+          if (user) {
+            FirebaseService.user = user;
+            this.currentUser = { email: user.email, uid: user.uid };
+            StorageService.setAuth(this.currentUser);
+
+            this.setCloudStatus('syncing');
+            await StorageService.syncFromFirebase();
+            this.vendors  = StorageService.getVendors();
+            this.sales    = StorageService.getSales();
+            this.settings = StorageService.getSettings();
+
+            this.populateDateSelects();
+            this.populateVendorDropdowns();
+            this.renderAll();
+
+            this.setCloudStatus('synced');
+            this.showAppShell();
+            return;
+          }
+        }
+
+        // No valid Firebase session — force login
+        StorageService.setAuth(null);
+        this.showAuthScreen();
+      },
+
+      showAuthError(msg) {
+        const box = document.getElementById('auth-error-box');
+        if (!box) return;
+        box.textContent = msg;
+        box.classList.add('show');
+      },
+      hideAuthError() {
+        const box = document.getElementById('auth-error-box');
+        if (!box) return;
+        box.classList.remove('show');
+        box.textContent = '';
+      },
+
+      friendlyAuthError(err) {
+        const code = err?.code || '';
+        const map = {
+          'auth/invalid-email':          'Format email tidak sah.',
+          'auth/user-disabled':          'Akaun ini telah dilumpuhkan.',
+          'auth/user-not-found':         'Akaun tidak dijumpai. Sila daftar dahulu.',
+          'auth/wrong-password':         'Password salah.',
+          'auth/invalid-credential':     'Email atau password tidak sah.',
+          'auth/email-already-in-use':   'Email ini sudah berdaftar. Sila log masuk.',
+          'auth/weak-password':          'Password terlalu lemah (minimum 6 aksara).',
+          'auth/network-request-failed': 'Ralat rangkaian. Sila cuba lagi.',
+          'auth/too-many-requests':      'Terlalu banyak percubaan. Sila cuba sebentar lagi.',
+          'auth/operation-not-allowed':  'Kaedah Email/Password belum diaktifkan di Firebase Console.',
+          'auth/missing-password':       'Sila masukkan password.',
+          'auth/missing-email':          'Sila masukkan email.'
+        };
+        return map[code] || (err?.message || 'Ralat pengesahan. Sila cuba lagi.');
+      },
+
+      showAuthScreen() {
+        document.getElementById('auth-screen').style.display = 'flex';
+        document.getElementById('app-shell').style.display = 'none';
+        this.hideAuthError();
+      },
+
+      showAppShell() {
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('app-shell').style.display = 'block';
+        document.getElementById('top-business-name').textContent = this.settings.businessName || 'Outlet Sales Network';
+        document.getElementById('setting-business-name').value = this.settings.businessName || 'Outlet Sales Network';
+        document.getElementById('setting-user-email').value = this.currentUser?.email || '';
+
+        this.populateDateSelects();
+        this.populateVendorDropdowns();
+        this.renderAll();
+
+        requestAnimationFrame(() => this.updateNavIndicator(false));
+      },
+
+      formatRM(amount) {
+        const num = parseFloat(amount) || 0;
+        return 'RM ' + num.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      },
+
+      updateNavIndicator(animate = true) {
+        const nav = document.getElementById('bottom-nav');
+        if (!nav) return;
+        const indicator = nav.querySelector('.nav-indicator');
+        if (!indicator) return;
+        const active = nav.querySelector('.nav-item.active:not(.nav-add-btn)');
+        if (!active) { indicator.style.opacity = '0'; return; }
+
+        const navRect = nav.getBoundingClientRect();
+        const itemRect = active.getBoundingClientRect();
+        const offsetX = itemRect.left - navRect.left - nav.clientLeft;
+
+        if (!animate) indicator.style.transition = 'none';
+        indicator.style.width = itemRect.width + 'px';
+        indicator.style.transform = `translateX(${offsetX}px)`;
+        indicator.style.opacity = '1';
+        if (!animate) { void indicator.offsetWidth; indicator.style.transition = ''; }
+      },
+
+      bindEvents() {
+        const self = this;
+
+        // ===== Login / Signup Form =====
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          self.hideAuthError();
+
+          const email = document.getElementById('login-email').value.trim();
+          const pass  = document.getElementById('login-password').value;
+          const confirmPass = document.getElementById('login-password-confirm').value;
+          const remember = document.getElementById('login-remember').checked;
+          const isSignup = self.authMode === 'signup';
+
+          if (!email || !pass) {
+            self.showAuthError('Sila masukkan email dan password.');
+            return;
+          }
+          if (pass.length < 6) {
+            self.showAuthError('Password mesti sekurang-kurangnya 6 aksara.');
+            return;
+          }
+          if (isSignup && pass !== confirmPass) {
+            self.showAuthError('Password dan konfirmasi tidak sepadan.');
+            return;
+          }
+
+          if (!FirebaseService.ready || !window.Firebase.auth) {
+            self.showAuthError('Firebase tidak tersedia. Sila semak sambungan internet.');
+            return;
+          }
+
+          const btn = document.getElementById('login-btn');
+          const btnText = document.getElementById('login-btn-text');
+          const originalText = btnText.textContent;
+          btn.disabled = true;
+          btnText.textContent = isSignup ? 'Mendaftar…' : 'Mengesahkan…';
+
+          try {
+            let cred;
+            if (isSignup) {
+              cred = await window.Firebase.createUserWithEmailAndPassword(
+                FirebaseService.auth, email, pass
+              );
+              self.showToast('Akaun berjaya didaftarkan!', 'success');
+            } else {
+              cred = await window.Firebase.signInWithEmailAndPassword(
+                FirebaseService.auth, email, pass
+              );
+              self.showToast(`Selamat kembali, ${email.split('@')[0]}!`, 'success');
+            }
+
+            FirebaseService.user = cred.user;
+            const session = { email, uid: cred.user.uid, loginAt: new Date().toISOString() };
+            if (remember) StorageService.setAuth(session);
+            self.currentUser = session;
+
+            self.setCloudStatus('syncing');
+            await StorageService.syncFromFirebase();
+            self.vendors  = StorageService.getVendors();
+            self.sales    = StorageService.getSales();
+            self.settings = StorageService.getSettings();
+            self.populateDateSelects();
+            self.populateVendorDropdowns();
+            self.renderAll();
+            self.setCloudStatus('synced');
+
+            btn.disabled = false;
+            btnText.textContent = originalText;
+            self.showAppShell();
+          } catch (err) {
+            console.warn('[Auth]', err);
+            btn.disabled = false;
+            btnText.textContent = originalText;
+            self.showAuthError(self.friendlyAuthError(err));
+          }
+        });
+
+        // ===== Sign In / Sign Up toggle =====
+        document.getElementById('auth-toggle-link').addEventListener('click', (e) => {
+          e.preventDefault();
+          self.hideAuthError();
+          self.authMode = self.authMode === 'signin' ? 'signup' : 'signin';
+          const isSignup = self.authMode === 'signup';
+          document.getElementById('login-btn-text').textContent = isSignup ? 'Daftar Akaun' : 'Sign In';
+          document.getElementById('auth-toggle-text').textContent = isSignup ? 'Sudah ada akaun?' : 'Belum ada akaun?';
+          document.getElementById('auth-toggle-link').textContent = isSignup ? 'Log Masuk' : 'Daftar Sekarang';
+          document.getElementById('confirm-password-group').style.display = isSignup ? 'block' : 'none';
+          document.getElementById('forgot-password-link').style.display = isSignup ? 'none' : 'inline';
+          document.getElementById('login-password').setAttribute(
+            'autocomplete', isSignup ? 'new-password' : 'current-password'
+          );
+        });
+
+        // ===== Forgot Password =====
+        document.getElementById('forgot-password-link').addEventListener('click', async (e) => {
+          e.preventDefault();
+          self.hideAuthError();
+          const email = document.getElementById('login-email').value.trim();
+          if (!email) {
+            self.showAuthError('Sila masukkan email terlebih dahulu, kemudian klik "Lupa Password?".');
+            return;
+          }
+          if (!FirebaseService.ready || !window.Firebase.sendPasswordResetEmail) {
+            self.showAuthError('Firebase tidak tersedia.');
+            return;
+          }
+          try {
+            await window.Firebase.sendPasswordResetEmail(FirebaseService.auth, email);
+            self.showToast(`Pautan reset dihantar ke ${email}`, 'success');
+          } catch (err) {
+            console.warn('[Auth] Reset failed:', err);
+            self.showAuthError(self.friendlyAuthError(err));
+          }
+        });
+
+        // ===== Navigation =====
+        document.querySelectorAll('#bottom-nav .nav-item[data-page]').forEach(btn => {
+          btn.addEventListener('click', () => self.showPage(btn.getAttribute('data-page')));
+        });
+
+        // ===== Add Sale Buttons =====
+        document.getElementById('nav-add-sale').addEventListener('click', () => self.openSaleModal());
+        document.getElementById('quick-add-btn').addEventListener('click', () => self.openSaleModal());
+        document.getElementById('vd-add-sale-btn').addEventListener('click', () => self.openSaleModal(null, self.selectedVendorId));
+
+        // ===== Logout =====
+        document.getElementById('header-logout-btn').addEventListener('click', () => self.confirmLogout());
+        document.getElementById('logout-btn').addEventListener('click', () => self.confirmLogout());
+
+        // ===== Sale Form Auto-Calc =====
+        const qtyEl = document.getElementById('sale-qty');
+        const priceEl = document.getElementById('sale-price');
+        const updateCalc = () => {
+          const q = parseFloat(qtyEl.value) || 0;
+          const p = parseFloat(priceEl.value) || 0;
+          document.getElementById('sale-calc-total').textContent = self.formatRM(q * p);
+        };
+        qtyEl.addEventListener('input', updateCalc);
+        priceEl.addEventListener('input', updateCalc);
+
+        document.getElementById('sale-form').addEventListener('submit', (e) => { e.preventDefault(); self.handleSaveSale(); });
+        document.getElementById('vendor-form').addEventListener('submit', (e) => { e.preventDefault(); self.handleSaveVendor(); });
+
+        document.getElementById('vendor-search-input').addEventListener('input', (e) => self.renderVendors(e.target.value));
+
+        ['sales-search-filter', 'sales-vendor-filter', 'sales-date-filter'].forEach(id => {
+          document.getElementById(id).addEventListener('input', () => self.renderMasterSales());
+        });
+
+        document.getElementById('report-month-select').addEventListener('change', () => self.renderReports());
+        document.getElementById('report-year-select').addEventListener('change', () => self.renderReports());
+
+        document.getElementById('export-monthly-pdf-btn').addEventListener('click', () => self.exportMonthlyPDF());
+        document.getElementById('vd-export-pdf-btn').addEventListener('click', () => self.exportVendorPDF(self.selectedVendorId));
+
+        document.getElementById('save-settings-btn').addEventListener('click', () => {
+          const name = document.getElementById('setting-business-name').value.trim();
+          self.settings.businessName = name || 'Outlet Sales Network';
+          StorageService.setSettings(self.settings);
+          document.getElementById('top-business-name').textContent = self.settings.businessName;
+          self.showToast('Settings successfully updated!', 'success');
+        });
+
+        document.getElementById('export-json-btn').addEventListener('click', () => self.exportJSONBackup());
+        document.getElementById('import-json-input').addEventListener('change', (e) => self.importJSONBackup(e));
+
+        document.getElementById('sync-cloud-btn').addEventListener('click', async () => {
+          if (!FirebaseService.ready || !FirebaseService.user) {
+            self.showToast('Sila log masuk terlebih dahulu.', 'danger');
+            return;
+          }
+          self.setCloudStatus('syncing');
+          const ok1 = await FirebaseService.saveVendors(self.vendors);
+          const ok2 = await FirebaseService.saveSales(self.sales);
+          const ok3 = await FirebaseService.saveSettings(self.settings);
+          if (ok1 && ok2 && ok3) {
+            self.setCloudStatus('synced');
+            self.showToast('Data synced to Firebase cloud!', 'success');
+          } else {
+            self.setCloudStatus('offline');
+            self.showToast('Cloud sync failed. Check your Firebase rules.', 'danger');
+          }
+        });
+
+        document.getElementById('clear-all-data-btn').addEventListener('click', () => {
+          self.openConfirm('Clear All Stored Records?', 'All vendor records and sales history will be permanently deleted from local storage AND Firebase cloud!', () => {
+            self.vendors = [];
+            self.sales = [];
+            StorageService.setVendors([]);
+            StorageService.setSales([]);
+            FirebaseService.clearAll();
+            self.populateVendorDropdowns();
+            self.renderAll();
+            self.showToast('All stored records cleared.', 'danger');
+          });
+        });
+
+        document.getElementById('goto-all-sales-btn').addEventListener('click', () => self.showPage('reports'));
+
+        window.addEventListener('resize', () => self.updateNavIndicator(false));
+        window.addEventListener('orientationchange', () => setTimeout(() => self.updateNavIndicator(false), 250));
+
+        window.addEventListener('online', () => {
+          if (!FirebaseService.user) return;
+          self.setCloudStatus('syncing');
+          FirebaseService.saveVendors(self.vendors);
+          FirebaseService.saveSales(self.sales);
+          setTimeout(() => self.setCloudStatus(FirebaseService.ready ? 'synced' : 'offline'), 700);
+        });
+        window.addEventListener('offline', () => self.setCloudStatus('offline'));
+      },
+
+      showPage(pageId) {
+        document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
+        const target = document.getElementById(`page-${pageId}`);
+        if (target) target.classList.add('active');
+
+        const navMap = { 'vendor-detail': 'vendors' };
+        const navPage = navMap[pageId] || pageId;
+
+        let matched = false;
+        document.querySelectorAll('#bottom-nav .nav-item[data-page]').forEach(btn => {
+          const isActive = btn.getAttribute('data-page') === navPage;
+          btn.classList.toggle('active', isActive);
+          if (isActive) matched = true;
+        });
+        this.updateNavIndicator(matched);
+
+        if (pageId === 'home') this.renderDashboard();
+        else if (pageId === 'vendors') this.renderVendors();
+        else if (pageId === 'reports') { this.renderReports(); this.renderMasterSales(); }
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+
+      openVendorsTab() { this.showPage('vendors'); },
+      openReportsTab() { this.showPage('reports'); },
+
+      renderAll() {
+        this.renderDashboard();
+        this.renderVendors();
+        this.renderReports();
+        this.renderMasterSales();
+      },
+
+      renderDashboard() {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth();
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(now.getDate() - 7);
+        sevenDaysAgo.setHours(0, 0, 0, 0);
+
+        let todaySales = 0, todayTx = 0, weekSales = 0, weekTx = 0, monthSales = 0, monthTx = 0;
+        const vendorSalesMap = {};
+
+        this.sales.forEach(s => {
+          const sDate = new Date(s.date + 'T00:00:00');
+          const amt = parseFloat(s.total) || 0;
+          if (s.date === todayStr) { todaySales += amt; todayTx++; }
+          if (sDate >= sevenDaysAgo && sDate <= now) { weekSales += amt; weekTx++; }
+          if (sDate.getFullYear() === currentYear && sDate.getMonth() === currentMonth) { monthSales += amt; monthTx++; }
+          vendorSalesMap[s.vendorId] = (vendorSalesMap[s.vendorId] || 0) + amt;
+        });
+
+        document.getElementById('metric-today-sales').textContent = this.formatRM(todaySales);
+        document.getElementById('metric-today-tx').textContent = `${todayTx} transaction${todayTx === 1 ? '' : 's'}`;
+        document.getElementById('metric-week-sales').textContent = this.formatRM(weekSales);
+        document.getElementById('metric-week-tx').textContent = `${weekTx} transaction${weekTx === 1 ? '' : 's'}`;
+        document.getElementById('metric-month-sales').textContent = this.formatRM(monthSales);
+        document.getElementById('metric-month-tx').textContent = `${monthTx} transaction${monthTx === 1 ? '' : 's'}`;
+
+        const activeVendors = this.vendors.filter(v => v.status === 'Active').length;
+        document.getElementById('metric-total-vendors').textContent = this.vendors.length;
+        document.getElementById('metric-active-vendors').textContent = `${activeVendors} Active outlets`;
+
+        const recentTbody = document.getElementById('dashboard-recent-tbody');
+        const emptyNotice = document.getElementById('dashboard-sales-empty');
+        const sortedSales = [...this.sales].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        if (sortedSales.length === 0) {
+          recentTbody.innerHTML = '';
+          emptyNotice.style.display = 'block';
+        } else {
+          emptyNotice.style.display = 'none';
+          recentTbody.innerHTML = sortedSales.slice(0, 5).map(s => `
+            <tr>
+              <td data-label="Date"><b>${s.date}</b></td>
+              <td data-label="Vendor">${s.vendorName}</td>
+              <td data-label="Item">${s.product}</td>
+              <td data-label="Qty">${s.qty}</td>
+              <td data-label="Total" style="font-weight:700; color:var(--primary);">${this.formatRM(s.total)}</td>
+              <td data-label="Payment"><span class="badge badge-method">${s.payment}</span></td>
+            </tr>
+          `).join('');
+        }
+
+        const topListEl = document.getElementById('top-vendors-list');
+        const vendorRankings = this.vendors.map(v => ({ ...v, totalSales: vendorSalesMap[v.id] || 0 }))
+          .sort((a, b) => b.totalSales - a.totalSales);
+
+        if (vendorRankings.length === 0) {
+          topListEl.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">No vendor data.</div>';
+        } else {
+          topListEl.innerHTML = vendorRankings.slice(0, 4).map((v, i) => `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:rgba(255,255,255,0.6); border-radius:12px; border:1px solid var(--border-subtle); cursor:pointer;" onclick="window.App.openVendorDetail('${v.id}')">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-weight:800; font-size:14px; width:22px; color:var(--primary);">#${i + 1}</span>
+                <div>
+                  <div style="font-weight:700; font-size:13px;">${v.name}</div>
+                  <div style="font-size:11px; color:var(--text-muted);">${v.location}</div>
+                </div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-weight:800; color:var(--text-main); font-size:13px;">${this.formatRM(v.totalSales)}</div>
+                <span class="badge ${v.status === 'Active' ? 'badge-active' : 'badge-inactive'}">${v.status}</span>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        this.renderChart();
+      },
+
+      renderChart() {
+        const ctx = document.getElementById('salesTrendChart');
+        if (!ctx) return;
+
+        const labels = [];
+        const dailyAmounts = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          const dateStr = d.toISOString().split('T')[0];
+          labels.push(d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
+          dailyAmounts.push(this.sales.filter(s => s.date === dateStr)
+            .reduce((sum, s) => sum + (parseFloat(s.total) || 0), 0));
+        }
+
+        if (this.salesChartInstance) this.salesChartInstance.destroy();
+
+        this.salesChartInstance = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              label: 'Sales (RM)',
+              data: dailyAmounts,
+              borderColor: '#f43f5e',
+              backgroundColor: 'rgba(244, 63, 94, 0.12)',
+              borderWidth: 2.5,
+              tension: 0.35,
+              fill: true,
+              pointBackgroundColor: '#f43f5e',
+              pointRadius: 4,
+              pointHoverRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: { callbacks: { label: (context) => ` Sales: RM ${context.raw.toFixed(2)}` } }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { callback: (v) => 'RM ' + v, font: { size: 10 } },
+                grid: { color: 'rgba(244, 63, 94, 0.08)' }
+              },
+              x: { ticks: { font: { size: 10 } }, grid: { display: false } }
+            }
+          }
+        });
+      },
+
+      renderVendors(filterKeyword = '') {
+        const grid = document.getElementById('vendors-card-grid');
+        const empty = document.getElementById('vendors-empty');
+        const query = filterKeyword.toLowerCase().trim();
+
+        const filtered = this.vendors.filter(v =>
+          v.name.toLowerCase().includes(query) ||
+          v.location.toLowerCase().includes(query) ||
+          (v.contact && v.contact.toLowerCase().includes(query)) ||
+          (v.phone && v.phone.includes(query))
+        );
+
+        if (filtered.length === 0) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
+        empty.style.display = 'none';
+
+        grid.innerHTML = filtered.map(v => {
+          const totalEarned = this.sales.filter(s => s.vendorId === v.id)
+            .reduce((sum, s) => sum + (parseFloat(s.total) || 0), 0);
+          return `
+            <div class="glass-card" style="padding:16px; display:flex; flex-direction:column; justify-content:space-between;">
+              <div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                  <h3 style="font-size:16px; font-weight:700; color:var(--text-main); cursor:pointer;" onclick="window.App.openVendorDetail('${v.id}')">${v.name}</h3>
+                  <span class="badge ${v.status === 'Active' ? 'badge-active' : 'badge-inactive'}">${v.status}</span>
+                </div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:12px; line-height:1.6;">
+                  <div>📍 <b>${v.location}</b></div>
+                  <div>👤 ${v.contact || 'No contact specified'} • 📞 ${v.phone || '-'}</div>
+                  ${v.notes ? `<div style="font-style:italic; margin-top:4px;">"${v.notes}"</div>` : ''}
+                </div>
+              </div>
+              <div>
+                <div style="background:rgba(244,63,94,0.06); padding:8px 10px; border-radius:10px; display:flex; justify-content:space-between; margin-bottom:12px; font-size:12px;">
+                  <span>Lifetime Sales:</span>
+                  <span style="font-weight:800; color:var(--primary);">${this.formatRM(totalEarned)}</span>
+                </div>
+                <div style="display:flex; gap:6px;">
+                  <button class="btn btn-soft" style="flex:1; padding:6px; font-size:12px;" onclick="window.App.openVendorDetail('${v.id}')">📊 Stats</button>
+                  <button class="btn btn-secondary btn-icon" title="Edit Vendor" onclick="window.App.openVendorModal('${v.id}')">✏️</button>
+                  <button class="btn btn-secondary btn-icon" title="Delete Vendor" onclick="window.App.confirmDeleteVendor('${v.id}')">🗑️</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      },
+
+      openVendorDetail(vendorId) {
+        const vendor = this.vendors.find(v => v.id === vendorId);
+        if (!vendor) return;
+
+        this.selectedVendorId = vendorId;
+        document.getElementById('vd-name').textContent = vendor.name;
+        document.getElementById('vd-location').textContent = vendor.location;
+        document.getElementById('vd-phone').textContent = vendor.phone || '-';
+        document.getElementById('vd-contact').textContent = vendor.contact || '-';
+
+        const vendorTx = this.sales.filter(s => s.vendorId === vendorId);
+        const totalSales = vendorTx.reduce((sum, s) => sum + (parseFloat(s.total) || 0), 0);
+        const totalQty = vendorTx.reduce((sum, s) => sum + (parseInt(s.qty) || 0), 0);
+
+        const now = new Date();
+        const monthSales = vendorTx.filter(s => {
+          const d = new Date(s.date + 'T00:00:00');
+          return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+        }).reduce((sum, s) => sum + (parseFloat(s.total) || 0), 0);
+
+        document.getElementById('vd-total-sales').textContent = this.formatRM(totalSales);
+        document.getElementById('vd-month-sales').textContent = this.formatRM(monthSales);
+        document.getElementById('vd-total-qty').textContent = `${totalQty} units`;
+        document.getElementById('vd-total-tx').textContent = vendorTx.length;
+
+        const tbody = document.getElementById('vendor-sales-tbody');
+        const empty = document.getElementById('vendor-sales-empty');
+
+        if (vendorTx.length === 0) {
+          tbody.innerHTML = '';
+          empty.style.display = 'block';
+        } else {
+          empty.style.display = 'none';
+          const sorted = [...vendorTx].sort((a, b) => new Date(b.date) - new Date(a.date));
+          tbody.innerHTML = sorted.map(s => `
+            <tr>
+              <td data-label="Date"><b>${s.date}</b></td>
+              <td data-label="Product">${s.product}</td>
+              <td data-label="Quantity">${s.qty}</td>
+              <td data-label="Unit Price">${this.formatRM(s.price)}</td>
+              <td data-label="Total Amount" style="font-weight:700; color:var(--primary);">${this.formatRM(s.total)}</td>
+              <td data-label="Payment"><span class="badge badge-method">${s.payment}</span></td>
+              <td data-label="Actions">
+                <div style="display:flex; gap:6px;">
+                  <button class="btn btn-secondary btn-icon" style="width:28px; height:28px;" title="Edit" onclick="window.App.openSaleModal('${s.id}')">✏️</button>
+                  <button class="btn btn-secondary btn-icon" style="width:28px; height:28px;" title="Delete" onclick="window.App.confirmDeleteSale('${s.id}')">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          `).join('');
+        }
+        this.showPage('vendor-detail');
+      },
+
+      populateDateSelects() {
+        const monthSelect = document.getElementById('report-month-select');
+        const yearSelect = document.getElementById('report-year-select');
+        const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        monthSelect.innerHTML = months.map((m, idx) => `<option value="${idx}">${m}</option>`).join('');
+        const currentYear = new Date().getFullYear();
+        yearSelect.innerHTML = `
+          <option value="${currentYear - 1}">${currentYear - 1}</option>
+          <option value="${currentYear}" selected>${currentYear}</option>
+          <option value="${currentYear + 1}">${currentYear + 1}</option>
+        `;
+        monthSelect.value = new Date().getMonth();
+      },
+
+      renderReports() {
+        const selMonth = parseInt(document.getElementById('report-month-select').value);
+        const selYear = parseInt(document.getElementById('report-year-select').value);
+
+        const monthSales = this.sales.filter(s => {
+          const d = new Date(s.date + 'T00:00:00');
+          return d.getMonth() === selMonth && d.getFullYear() === selYear;
+        });
+
+        const totalAmt = monthSales.reduce((sum, s) => sum + (parseFloat(s.total) || 0), 0);
+        const totalItems = monthSales.reduce((sum, s) => sum + (parseInt(s.qty) || 0), 0);
+
+        const vendorAgg = {};
+        monthSales.forEach(s => {
+          if (!vendorAgg[s.vendorId]) {
+            vendorAgg[s.vendorId] = { name: s.vendorName, txCount: 0, qtyCount: 0, totalSum: 0 };
+          }
+          vendorAgg[s.vendorId].txCount++;
+          vendorAgg[s.vendorId].qtyCount += parseInt(s.qty) || 0;
+          vendorAgg[s.vendorId].totalSum += parseFloat(s.total) || 0;
+        });
+
+        document.getElementById('rep-total-sales').textContent = this.formatRM(totalAmt);
+        document.getElementById('rep-total-vendors').textContent = Object.keys(vendorAgg).length;
+        document.getElementById('rep-total-tx').textContent = monthSales.length;
+        document.getElementById('rep-total-items').textContent = totalItems;
+
+        const tbody = document.getElementById('report-breakdown-tbody');
+        const rows = Object.keys(vendorAgg).map(vId => {
+          const vData = vendorAgg[vId];
+          const vendorObj = this.vendors.find(v => v.id === vId);
+          const percent = totalAmt > 0 ? ((vData.totalSum / totalAmt) * 100).toFixed(1) : 0;
+          return `
+            <tr>
+              <td data-label="Vendor Name"><b>${vData.name}</b></td>
+              <td data-label="Location">${vendorObj ? vendorObj.location : '-'}</td>
+              <td data-label="Transactions">${vData.txCount}</td>
+              <td data-label="Total Qty">${vData.qtyCount}</td>
+              <td data-label="Total Sales" style="font-weight:700; color:var(--primary);">${this.formatRM(vData.totalSum)}</td>
+              <td data-label="% of Month">${percent}%</td>
+            </tr>
+          `;
+        });
+
+        tbody.innerHTML = rows.length === 0
+          ? `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:16px;">No transactions recorded for selected period.</td></tr>`
+          : rows.join('');
+      },
+
+      renderMasterSales() {
+        const textQuery = (document.getElementById('sales-search-filter').value || '').toLowerCase().trim();
+        const vendorFilter = document.getElementById('sales-vendor-filter').value;
+        const dateFilter = document.getElementById('sales-date-filter').value;
+
+        const filtered = this.sales.filter(s => {
+          const matchText = !textQuery ||
+            s.product.toLowerCase().includes(textQuery) ||
+            (s.notes && s.notes.toLowerCase().includes(textQuery)) ||
+            s.vendorName.toLowerCase().includes(textQuery);
+          const matchVendor = !vendorFilter || s.vendorId === vendorFilter;
+          const matchDate = !dateFilter || s.date === dateFilter;
+          return matchText && matchVendor && matchDate;
+        });
+
+        const tbody = document.getElementById('master-sales-tbody');
+        const empty = document.getElementById('master-sales-empty');
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = '';
+          empty.style.display = 'block';
+        } else {
+          empty.style.display = 'none';
+          const sorted = [...filtered].sort((a, b) => new Date(b.date) - new Date(a.date));
+          tbody.innerHTML = sorted.map(s => `
+            <tr>
+              <td data-label="Date"><b>${s.date}</b></td>
+              <td data-label="Vendor">${s.vendorName}</td>
+              <td data-label="Product">${s.product}</td>
+              <td data-label="Qty">${s.qty}</td>
+              <td data-label="Unit Price">${this.formatRM(s.price)}</td>
+              <td data-label="Total" style="font-weight:700; color:var(--primary);">${this.formatRM(s.total)}</td>
+              <td data-label="Payment"><span class="badge badge-method">${s.payment}</span></td>
+              <td data-label="Actions">
+                <div style="display:flex; gap:6px;">
+                  <button class="btn btn-secondary btn-icon" style="width:28px; height:28px;" title="Edit" onclick="window.App.openSaleModal('${s.id}')">✏️</button>
+                  <button class="btn btn-secondary btn-icon" style="width:28px; height:28px;" title="Delete" onclick="window.App.confirmDeleteSale('${s.id}')">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          `).join('');
+        }
+      },
+
+      populateVendorDropdowns() {
+        const saleVendorSelect = document.getElementById('sale-vendor-id');
+        const filterVendorSelect = document.getElementById('sales-vendor-filter');
+
+        saleVendorSelect.innerHTML = this.vendors.length === 0
+          ? '<option value="">-- No Vendors Available --</option>'
+          : this.vendors.map(v => `<option value="${v.id}">${v.name} (${v.location})</option>`).join('');
+
+        filterVendorSelect.innerHTML = '<option value="">All Vendors</option>' +
+          this.vendors.map(v => `<option value="${v.id}">${v.name}</option>`).join('');
+      },
+
+      openSaleModal(saleId = null, preselectedVendorId = null) {
+        if (this.vendors.length === 0) {
+          this.showToast('Please create at least one vendor first!', 'warning');
+          this.openVendorModal();
+          return;
+        }
+        const titleEl = document.getElementById('sale-modal-title');
+        const form = document.getElementById('sale-form');
+        form.reset();
+
+        if (saleId) {
+          const sale = this.sales.find(s => s.id === saleId);
+          if (sale) {
+            titleEl.textContent = 'Edit Sale Record';
+            document.getElementById('sale-edit-id').value = sale.id;
+            document.getElementById('sale-vendor-id').value = sale.vendorId;
+            document.getElementById('sale-date').value = sale.date;
+            document.getElementById('sale-product').value = sale.product;
+            document.getElementById('sale-qty').value = sale.qty;
+            document.getElementById('sale-price').value = sale.price;
+            document.getElementById('sale-payment').value = sale.payment;
+            document.getElementById('sale-notes').value = sale.notes || '';
+            document.getElementById('sale-calc-total').textContent = this.formatRM(sale.total);
+          }
+        } else {
+          titleEl.textContent = 'Record Daily Sale';
+          document.getElementById('sale-edit-id').value = '';
+          document.getElementById('sale-date').value = new Date().toISOString().split('T')[0];
+          document.getElementById('sale-qty').value = '1';
+          document.getElementById('sale-price').value = '';
+          document.getElementById('sale-calc-total').textContent = 'RM 0.00';
+          if (preselectedVendorId) document.getElementById('sale-vendor-id').value = preselectedVendorId;
+        }
+        this.openModal('sale-modal');
+      },
+
+      handleSaveSale() {
+        const id = document.getElementById('sale-edit-id').value;
+        const vendorId = document.getElementById('sale-vendor-id').value;
+        const date = document.getElementById('sale-date').value;
+        const product = document.getElementById('sale-product').value.trim();
+        const qty = parseInt(document.getElementById('sale-qty').value, 10);
+        const price = parseFloat(document.getElementById('sale-price').value);
+        const payment = document.getElementById('sale-payment').value;
+        const notes = document.getElementById('sale-notes').value.trim();
+
+        if (!vendorId || !date || !product || isNaN(qty) || qty <= 0 || isNaN(price) || price < 0) {
+          this.showToast('Please complete all required fields with valid values.', 'danger');
+          return;
+        }
+
+        const vendor = this.vendors.find(v => v.id === vendorId);
+        const total = parseFloat((qty * price).toFixed(2));
+
+        if (id) {
+          const idx = this.sales.findIndex(s => s.id === id);
+          if (idx !== -1) {
+            this.sales[idx] = {
+              ...this.sales[idx],
+              vendorId, vendorName: vendor ? vendor.name : 'Unknown Vendor',
+              date, product, qty, price, total, payment, notes
+            };
+            this.showToast('Sale record updated!', 'success');
+          }
+        } else {
+          this.sales.unshift({
+            id: 'TX-' + Date.now().toString().slice(-6),
+            vendorId, vendorName: vendor ? vendor.name : 'Unknown Vendor',
+            date, product, qty, price, total, payment, notes
+          });
+          this.showToast('Daily sale recorded successfully!', 'success');
+        }
+
+        StorageService.setSales(this.sales);
+        this.closeModal('sale-modal');
+        this.renderAll();
+        if (this.selectedVendorId) this.openVendorDetail(this.selectedVendorId);
+      },
+
+      openVendorModal(vendorId = null) {
+        const titleEl = document.getElementById('vendor-modal-title');
+        const form = document.getElementById('vendor-form');
+        form.reset();
+
+        if (vendorId) {
+          const vendor = this.vendors.find(v => v.id === vendorId);
+          if (vendor) {
+            titleEl.textContent = 'Edit Vendor Outlet';
+            document.getElementById('vendor-edit-id').value = vendor.id;
+            document.getElementById('vendor-name').value = vendor.name;
+            document.getElementById('vendor-contact').value = vendor.contact || '';
+            document.getElementById('vendor-phone').value = vendor.phone || '';
+            document.getElementById('vendor-location').value = vendor.location;
+            document.getElementById('vendor-status').value = vendor.status;
+            document.getElementById('vendor-notes').value = vendor.notes || '';
+          }
+        } else {
+          titleEl.textContent = 'Add New Vendor';
+          document.getElementById('vendor-edit-id').value = '';
+          document.getElementById('vendor-status').value = 'Active';
+        }
+        this.openModal('vendor-modal');
+      },
+
+      handleSaveVendor() {
+        const id = document.getElementById('vendor-edit-id').value;
+        const name = document.getElementById('vendor-name').value.trim();
+        const contact = document.getElementById('vendor-contact').value.trim();
+        const phone = document.getElementById('vendor-phone').value.trim();
+        const location = document.getElementById('vendor-location').value.trim();
+        const status = document.getElementById('vendor-status').value;
+        const notes = document.getElementById('vendor-notes').value.trim();
+
+        if (!name || !location) {
+          this.showToast('Vendor Name and Location are mandatory.', 'danger');
+          return;
+        }
+
+        if (id) {
+          const idx = this.vendors.findIndex(v => v.id === id);
+          if (idx !== -1) {
+            this.vendors[idx] = { id, name, contact, phone, location, status, notes };
+            this.sales.forEach(s => { if (s.vendorId === id) s.vendorName = name; });
+            StorageService.setSales(this.sales);
+            this.showToast('Vendor profile updated!', 'success');
+          }
+        } else {
+          this.vendors.push({
+            id: 'VEND-' + (this.vendors.length + 1).toString().padStart(3, '0'),
+            name, contact, phone, location, status, notes
+          });
+          this.showToast('Vendor registered successfully!', 'success');
+        }
+
+        StorageService.setVendors(this.vendors);
+        this.populateVendorDropdowns();
+        this.closeModal('vendor-modal');
+        this.renderAll();
+      },
+
+      confirmDeleteVendor(vendorId) {
+        const vendor = this.vendors.find(v => v.id === vendorId);
+        if (!vendor) return;
+        this.openConfirm(
+          `Delete "${vendor.name}"?`,
+          `This will delete the vendor. Existing sales records will be preserved for history.`,
+          () => {
+            this.vendors = this.vendors.filter(v => v.id !== vendorId);
+            StorageService.setVendors(this.vendors);
+            this.populateVendorDropdowns();
+            this.renderVendors();
+            this.renderDashboard();
+            this.showToast('Vendor deleted.', 'success');
+          }
+        );
+      },
+
+      confirmDeleteSale(saleId) {
+        this.openConfirm(
+          'Delete Sale Transaction?',
+          'Are you sure you want to remove this sales record from the system?',
+          () => {
+            this.sales = this.sales.filter(s => s.id !== saleId);
+            StorageService.setSales(this.sales);
+            this.renderAll();
+            if (this.selectedVendorId) this.openVendorDetail(this.selectedVendorId);
+            this.showToast('Transaction removed.', 'success');
+          }
+        );
+      },
+
+      async confirmLogout() {
+        this.openConfirm(
+          'Sign Out?',
+          'You will be returned to the login screen.',
+          async () => {
+            if (FirebaseService.ready && window.Firebase.signOut) {
+              try { await window.Firebase.signOut(FirebaseService.auth); } catch (e) {}
+            }
+            FirebaseService.user = null;
+            StorageService.setAuth(null);
+            this.currentUser = null;
+            this.firebaseUser = null;
+
+            // Clear cached data so next user starts fresh
+            StorageService.clearLocalData();
+            this.vendors = [];
+            this.sales = [];
+            this.settings = { businessName: 'Outlet Sales Network', currency: 'RM' };
+
+            this.showAuthScreen();
+            this.showToast('Signed out successfully.', 'success');
+          }
+        );
+      },
+
+      exportMonthlyPDF() {
+        if (!window.jspdf || !window.jspdf.jsPDF) {
+          this.showToast('PDF library still loading. Please try again in a moment.', 'warning');
+          return;
+        }
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+        const selMonth = parseInt(document.getElementById('report-month-select').value);
+        const selYear = parseInt(document.getElementById('report-year-select').value);
+        const monthNames = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+        const periodTitle = `${monthNames[selMonth]} ${selYear}`;
+
+        const monthSales = this.sales.filter(s => {
+          const d = new Date(s.date + 'T00:00:00');
+          return d.getMonth() === selMonth && d.getFullYear() === selYear;
+        });
+
+        const totalSales = monthSales.reduce((acc, s) => acc + (parseFloat(s.total) || 0), 0);
+        const totalItems = monthSales.reduce((acc, s) => acc + (parseInt(s.qty) || 0), 0);
+
+        doc.setFillColor(244, 63, 94);
+        doc.rect(0, 0, 210, 36, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
+        doc.setFont('helvetica', 'bold');
+        doc.text('MY VENDOR — MONTHLY SALES REPORT', 14, 18);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Billing Cycle: ${periodTitle} | Generated: ${new Date().toLocaleDateString('en-MY')}`, 14, 28);
+
+        doc.setFillColor(254, 226, 226);
+        doc.roundedRect(14, 42, 182, 22, 3, 3, 'F');
+        doc.setTextColor(30, 41, 59);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Total Sales: RM ${totalSales.toFixed(2)}`, 20, 52);
+        doc.text(`Total Transactions: ${monthSales.length}`, 80, 52);
+        doc.text(`Items Sold: ${totalItems} units`, 140, 52);
+
+        const vendorAgg = {};
+        monthSales.forEach(s => {
+          if (!vendorAgg[s.vendorId]) vendorAgg[s.vendorId] = { name: s.vendorName, count: 0, total: 0 };
+          vendorAgg[s.vendorId].count++;
+          vendorAgg[s.vendorId].total += parseFloat(s.total) || 0;
+        });
+        const breakdownRows = Object.keys(vendorAgg).map(id => [
+          vendorAgg[id].name, vendorAgg[id].count.toString(), `RM ${vendorAgg[id].total.toFixed(2)}`
+        ]);
+
+        doc.setFontSize(13);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(159, 18, 57);
+        doc.text('1. Outlet Sales Breakdown', 14, 73);
+
+        doc.autoTable({
+          startY: 77,
+          head: [['Vendor / Outlet Name', 'Transactions', 'Total Amount (RM)']],
+          body: breakdownRows.length > 0 ? breakdownRows : [['No data recorded', '-', '-']],
+          headStyles: { fillColor: [244, 63, 94], textColor: [255, 255, 255], fontStyle: 'bold' },
+          theme: 'grid', styles: { fontSize: 9 }
+        });
+
+        const detailStartY = doc.lastAutoTable.finalY + 12;
+        doc.setFontSize(13);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(159, 18, 57);
+        doc.text('2. Transaction Ledger', 14, detailStartY);
+
+        const detailRows = monthSales.map(s => [
+          s.date, s.vendorName, s.product, s.qty.toString(),
+          `RM ${parseFloat(s.price).toFixed(2)}`,
+          `RM ${parseFloat(s.total).toFixed(2)}`, s.payment
+        ]);
+
+        doc.autoTable({
+          startY: detailStartY + 4,
+          head: [['Date', 'Vendor', 'Product', 'Qty', 'Unit Price', 'Total', 'Payment']],
+          body: detailRows.length > 0 ? detailRows : [['No transactions', '-', '-', '-', '-', '-', '-']],
+          headStyles: { fillColor: [190, 18, 60], textColor: [255, 255, 255], fontStyle: 'bold' },
+          theme: 'striped', styles: { fontSize: 8 }
+        });
+
+        const filename = `MY-VENDOR-SALES-${periodTitle.replace(' ', '-')}.pdf`;
+        doc.save(filename);
+        this.showToast(`Saved ${filename}`, 'success');
+      },
+
+      exportVendorPDF(vendorId) {
+        if (!vendorId) return;
+        const vendor = this.vendors.find(v => v.id === vendorId);
+        if (!vendor) return;
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const now = new Date();
+        const currentMonthName = now.toLocaleString('en-MY', { month: 'long', year: 'numeric' }).toUpperCase();
+
+        const vendorSales = this.sales.filter(s => s.vendorId === vendorId);
+        const grandTotal = vendorSales.reduce((acc, s) => acc + (parseFloat(s.total) || 0), 0);
+        const grandQty = vendorSales.reduce((acc, s) => acc + (parseInt(s.qty) || 0), 0);
+
+        doc.setFillColor(244, 63, 94);
+        doc.rect(0, 0, 210, 36, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
+        doc.setFont('helvetica', 'bold');
+        doc.text('MY VENDOR — OUTLET STATEMENT', 14, 18);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Statement Cycle: ${currentMonthName} | Generated: ${new Date().toLocaleDateString('en-MY')}`, 14, 28);
+
+        doc.setFillColor(255, 241, 242);
+        doc.roundedRect(14, 42, 182, 30, 3, 3, 'F');
+        doc.setTextColor(30, 41, 59);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text(vendor.name.toUpperCase(), 20, 50);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Location: ${vendor.location}   |   Contact: ${vendor.contact || '-'}   |   Phone: ${vendor.phone || '-'}`, 20, 58);
+        doc.text(`Total Lifetime Volume: RM ${grandTotal.toFixed(2)} (${grandQty} units in ${vendorSales.length} deliveries)`, 20, 65);
+
+        const rows = vendorSales.map(s => [
+          s.date, s.product, s.qty.toString(),
+          `RM ${parseFloat(s.price).toFixed(2)}`,
+          `RM ${parseFloat(s.total).toFixed(2)}`, s.payment, s.notes || '-'
+        ]);
+
+        doc.autoTable({
+          startY: 78,
+          head: [['Date', 'Product / Item', 'Qty', 'Unit Price', 'Total Amount', 'Payment', 'Notes']],
+          body: rows.length > 0 ? rows : [['No recorded sales', '-', '-', '-', '-', '-', '-']],
+          headStyles: { fillColor: [244, 63, 94], textColor: [255, 255, 255], fontStyle: 'bold' },
+          theme: 'striped', styles: { fontSize: 8.5 }
+        });
+
+        const finalY = doc.lastAutoTable.finalY + 10;
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(225, 29, 72);
+        doc.text(`GRAND TOTAL: RM ${grandTotal.toFixed(2)}`, 130, finalY);
+
+        const safeName = vendor.name.replace(/[^a-zA-Z0-9]/g, '-').toUpperCase();
+        const filename = `${safeName}-${currentMonthName.replace(' ', '-')}.pdf`;
+        doc.save(filename);
+        this.showToast(`Exported ${filename}`, 'success');
+      },
+
+      exportJSONBackup() {
+        const payload = {
+          version: '3.0',
+          exportedAt: new Date().toISOString(),
+          settings: this.settings,
+          vendors: this.vendors,
+          sales: this.sales
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `MY-VENDOR-BACKUP-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.showToast('JSON backup file generated!', 'success');
+      },
+
+      importJSONBackup(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = JSON.parse(e.target.result);
+            if (data && Array.isArray(data.vendors) && Array.isArray(data.sales)) {
+              this.vendors = data.vendors;
+              this.sales = data.sales;
+              if (data.settings) this.settings = data.settings;
+              StorageService.setVendors(this.vendors);
+              StorageService.setSales(this.sales);
+              StorageService.setSettings(this.settings);
+              this.populateVendorDropdowns();
+              this.renderAll();
+              this.showToast('Data restored and synced to cloud!', 'success');
+            } else {
+              this.showToast('Invalid backup file structure.', 'danger');
+            }
+          } catch (err) {
+            this.showToast('Failed to parse JSON file.', 'danger');
+          }
+        };
+        reader.readAsText(file);
+      },
+
+      openModal(modalId) { document.getElementById(modalId).classList.add('active'); },
+      closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); },
+
+      openConfirm(title, message, onConfirm) {
+        const modal = document.getElementById('confirm-modal');
+        document.getElementById('confirm-title').textContent = title;
+        document.getElementById('confirm-msg').textContent = message;
+
+        const actionBtn = document.getElementById('confirm-action-btn');
+        const cancelBtn = document.getElementById('confirm-cancel-btn');
+
+        const newAction = actionBtn.cloneNode(true);
+        const newCancel = cancelBtn.cloneNode(true);
+        actionBtn.parentNode.replaceChild(newAction, actionBtn);
+        cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+
+        newAction.addEventListener('click', () => {
+          modal.classList.remove('active');
+          if (onConfirm) onConfirm();
+        });
+        newCancel.addEventListener('click', () => modal.classList.remove('active'));
+
+        modal.classList.add('active');
+      },
+
+      showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+
+        let icon = 'ℹ️';
+        if (type === 'success') { icon = '✅'; toast.style.borderLeftColor = 'var(--success)'; }
+        else if (type === 'danger') { icon = '❌'; toast.style.borderLeftColor = 'var(--danger)'; }
+        else if (type === 'warning') { icon = '⚠️'; toast.style.borderLeftColor = 'var(--warning)'; }
+
+        toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+        container.appendChild(toast);
+        requestAnimationFrame(() => toast.classList.add('show'));
+        setTimeout(() => {
+          toast.classList.remove('show');
+          setTimeout(() => toast.remove(), 350);
+        }, 3200);
+      }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      window.App.init();
+    });
+  </script>
+</body>
+</html>
