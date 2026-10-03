@@ -1343,17 +1343,17 @@
           <div class="glass-card metric-card" style="animation-delay: 0.05s;">
             <div class="metric-label">📅 Today's Sales</div>
             <div class="metric-value" id="metric-today-sales">RM 0.00</div>
-            <div class="metric-sub" id="metric-today-tx">0 transactions</div>
+            <div class="metric-sub" id="metric-today-tx">0 entries</div>
           </div>
           <div class="glass-card metric-card" style="animation-delay: 0.10s;">
             <div class="metric-label">📊 This Week</div>
             <div class="metric-value" id="metric-week-sales">RM 0.00</div>
-            <div class="metric-sub" id="metric-week-tx">0 transactions</div>
+            <div class="metric-sub" id="metric-week-tx">0 entries</div>
           </div>
           <div class="glass-card metric-card" style="animation-delay: 0.15s;">
             <div class="metric-label">🗓️ This Month</div>
             <div class="metric-value" id="metric-month-sales">RM 0.00</div>
-            <div class="metric-sub" id="metric-month-tx">0 transactions</div>
+            <div class="metric-sub" id="metric-month-tx">0 entries</div>
           </div>
           <div class="glass-card metric-card" style="animation-delay: 0.20s;">
             <div class="metric-label">🏪 Total Vendors</div>
@@ -1382,7 +1382,7 @@
               <div class="table-container">
                 <table class="custom-table" id="dashboard-recent-table">
                   <thead>
-                    <tr><th>Date</th><th>Vendor</th><th>Item</th><th>Qty</th><th>Total</th><th>Payment</th></tr>
+                    <tr><th>Date</th><th>Vendor</th><th>Amount</th><th>Remarks</th></tr>
                   </thead>
                   <tbody id="dashboard-recent-tbody"></tbody>
                 </table>
@@ -1390,7 +1390,7 @@
               <div id="dashboard-sales-empty" class="empty-state" style="display: none;">
                 <div class="empty-icon">📝</div>
                 <div class="empty-title">No sales recorded yet</div>
-                <p class="empty-desc">Record your first outlet sale to populate the live dashboard.</p>
+                <p class="empty-desc">Record your first daily sale to populate the live dashboard.</p>
                 <button class="btn btn-primary" onclick="window.App.openSaleModal()">+ Add First Sale</button>
               </div>
             </div>
@@ -1442,7 +1442,7 @@
           <div id="vendors-empty" class="empty-state" style="display: none;">
             <div class="empty-icon">🏪</div>
             <div class="empty-title">No vendors found</div>
-            <p class="empty-desc">Add your first vendor outlet to start recording deliveries and sales.</p>
+            <p class="empty-desc">Add your first vendor outlet to start recording daily sales.</p>
             <button class="btn btn-primary" onclick="window.App.openVendorModal()">+ Add Vendor</button>
           </div>
         </div>
@@ -1479,8 +1479,8 @@
             <div class="metric-value" id="vd-month-sales">RM 0.00</div>
           </div>
           <div class="glass-card metric-card">
-            <div class="metric-label">📦 Items Sold</div>
-            <div class="metric-value" id="vd-total-qty">0 units</div>
+            <div class="metric-label">📊 Average Sale</div>
+            <div class="metric-value" id="vd-avg-sale">RM 0.00</div>
           </div>
           <div class="glass-card metric-card">
             <div class="metric-label">🧾 Transactions</div>
@@ -1495,7 +1495,7 @@
           <div class="table-container">
             <table class="custom-table">
               <thead>
-                <tr><th>Date</th><th>Product</th><th>Quantity</th><th>Unit Price</th><th>Total Amount</th><th>Payment</th><th>Actions</th></tr>
+                <tr><th>Date</th><th>Amount</th><th>Remarks</th><th>Actions</th></tr>
               </thead>
               <tbody id="vendor-sales-tbody"></tbody>
             </table>
@@ -1503,7 +1503,7 @@
           <div id="vendor-sales-empty" class="empty-state" style="display: none;">
             <div class="empty-icon">📦</div>
             <div class="empty-title">No transactions for this vendor</div>
-            <p class="empty-desc">Record a delivery or sale to see history.</p>
+            <p class="empty-desc">Record a daily sale to see history.</p>
           </div>
         </div>
       </section>
@@ -1536,8 +1536,8 @@
               <div class="metric-value" id="rep-total-tx">0</div>
             </div>
             <div class="glass-card metric-card">
-              <div class="metric-label">📦 Items Sold</div>
-              <div class="metric-value" id="rep-total-items">0</div>
+              <div class="metric-label">📊 Average Sale</div>
+              <div class="metric-value" id="rep-avg-sale">RM 0.00</div>
             </div>
           </div>
 
@@ -1545,7 +1545,7 @@
           <div class="table-container" style="margin-bottom: 8px;">
             <table class="custom-table" id="report-breakdown-table">
               <thead>
-                <tr><th>Vendor Name</th><th>Location</th><th>Transactions</th><th>Total Qty</th><th>Total Sales (RM)</th><th>% of Month</th></tr>
+                <tr><th>Vendor Name</th><th>Location</th><th>Transactions</th><th>Total Sales (RM)</th><th>% of Month</th></tr>
               </thead>
               <tbody id="report-breakdown-tbody"></tbody>
             </table>
@@ -1561,7 +1561,7 @@
           </div>
 
           <div class="filters-grid">
-            <input type="text" id="sales-search-filter" class="form-control" placeholder="Search product or notes...">
+            <input type="text" id="sales-search-filter" class="form-control" placeholder="Search vendor or remarks...">
             <select id="sales-vendor-filter" class="form-control" aria-label="Filter by vendor">
               <option value="">All Vendors</option>
             </select>
@@ -1571,7 +1571,7 @@
           <div class="table-container">
             <table class="custom-table" id="master-sales-table">
               <thead>
-                <tr><th>Date</th><th>Vendor</th><th>Product</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Payment</th><th>Actions</th></tr>
+                <tr><th>Date</th><th>Vendor</th><th>Amount</th><th>Remarks</th><th>Actions</th></tr>
               </thead>
               <tbody id="master-sales-tbody"></tbody>
             </table>
@@ -1728,51 +1728,17 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="sale-product">Product / Item *</label>
-          <input type="text" id="sale-product" class="form-control" placeholder="e.g. Product A" required list="product-suggestions">
-          <datalist id="product-suggestions">
-            <option value="Product A"></option>
-            <option value="Product B"></option>
-            <option value="Product C"></option>
-            <option value="Product Deluxe"></option>
-          </datalist>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <div class="form-group">
-            <label class="form-label" for="sale-qty">Quantity *</label>
-            <input type="number" id="sale-qty" class="form-control" min="1" step="1" value="1" required inputmode="numeric">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="sale-price">Unit Price (RM) *</label>
-            <input type="number" id="sale-price" class="form-control" min="0.01" step="0.01" placeholder="5.00" required inputmode="decimal">
-          </div>
-        </div>
-
-        <div class="form-group" style="background: rgba(244, 63, 94, 0.08); padding: 12px; border-radius: var(--radius-sm);">
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-            <span style="font-weight: 700; font-size: 13px; color: var(--text-muted);">Calculated Total:</span>
-            <span id="sale-calc-total" style="font-size: 19px; font-weight: 800; color: var(--primary);">RM 0.00</span>
-          </div>
+          <label class="form-label" for="sale-amount">Sales Amount (RM) *</label>
+          <input type="number" id="sale-amount" class="form-control" min="0.01" step="0.01" placeholder="e.g. 150.00" required inputmode="decimal">
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="sale-payment">Payment Method</label>
-          <select id="sale-payment" class="form-control">
-            <option value="Cash">Cash</option>
-            <option value="QR">QR DuitNow</option>
-            <option value="Bank Transfer">Bank Transfer</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="sale-notes">Notes (Optional)</label>
-          <input type="text" id="sale-notes" class="form-control" placeholder="Batch number, invoice ref, etc.">
+          <label class="form-label" for="sale-notes">Remarks (Optional)</label>
+          <input type="text" id="sale-notes" class="form-control" placeholder="e.g. Daily collection, etc.">
         </div>
 
         <button type="submit" class="btn btn-primary" style="width: 100%; padding: 13px; font-size: 15px; min-height: 50px;">
-          💾 Save Transaction
+          💾 Save Daily Sale
         </button>
       </form>
     </div>
@@ -1848,7 +1814,7 @@
       const manifest = {
         name: "MY VENDOR Sales Management",
         short_name: "MY VENDOR",
-        description: "Modern sales and outlet tracking Progressive Web App",
+        description: "Modern daily sales tracking Progressive Web App",
         start_url: "./",
         display: "standalone",
         background_color: "#fff1f2",
@@ -1867,7 +1833,7 @@
 
       if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
         const swScript = `
-          const CACHE_NAME = 'my-vendor-v3.3';
+          const CACHE_NAME = 'my-vendor-v3.4';
           self.addEventListener('install', e => self.skipWaiting());
           self.addEventListener('activate', e => e.waitUntil(clients.claim()));
           self.addEventListener('fetch', e => {
@@ -2035,6 +2001,11 @@
       _currentPage: 'home',
       _isMobile: window.matchMedia('(max-width: 767px)').matches,
       _prefersReducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+
+      // Helper: get amount from sale object (backwards compatible with old `total` field)
+      getSaleAmount(s) {
+        return parseFloat(s.amount || s.total) || 0;
+      },
 
       async init() {
         await this.waitForFirebase(5000);
@@ -2415,17 +2386,6 @@
         document.getElementById('header-logout-btn').addEventListener('click', () => self.confirmLogout());
         document.getElementById('logout-btn').addEventListener('click', () => self.confirmLogout());
 
-        // ===== Sale Form Auto-Calc =====
-        const qtyEl = document.getElementById('sale-qty');
-        const priceEl = document.getElementById('sale-price');
-        const updateCalc = () => {
-          const q = parseFloat(qtyEl.value) || 0;
-          const p = parseFloat(priceEl.value) || 0;
-          document.getElementById('sale-calc-total').textContent = self.formatRM(q * p);
-        };
-        qtyEl.addEventListener('input', updateCalc);
-        priceEl.addEventListener('input', updateCalc);
-
         document.getElementById('sale-form').addEventListener('submit', (e) => { e.preventDefault(); self.handleSaveSale(); });
         document.getElementById('vendor-form').addEventListener('submit', (e) => { e.preventDefault(); self.handleSaveVendor(); });
 
@@ -2589,7 +2549,7 @@
 
         this.sales.forEach(s => {
           const sDate = new Date(s.date + 'T00:00:00');
-          const amt = parseFloat(s.total) || 0;
+          const amt = this.getSaleAmount(s);
           if (s.date === todayStr) { todaySales += amt; todayTx++; }
           if (sDate >= sevenDaysAgo && sDate <= now) { weekSales += amt; weekTx++; }
           if (sDate.getFullYear() === currentYear && sDate.getMonth() === currentMonth) { monthSales += amt; monthTx++; }
@@ -2606,11 +2566,11 @@
         };
 
         setMetric('metric-today-sales', this.formatRM(todaySales));
-        setMetric('metric-today-tx', `${todayTx} transaction${todayTx === 1 ? '' : 's'}`);
+        setMetric('metric-today-tx', `${todayTx} entr${todayTx === 1 ? 'y' : 'ies'}`);
         setMetric('metric-week-sales', this.formatRM(weekSales));
-        setMetric('metric-week-tx', `${weekTx} transaction${weekTx === 1 ? '' : 's'}`);
+        setMetric('metric-week-tx', `${weekTx} entr${weekTx === 1 ? 'y' : 'ies'}`);
         setMetric('metric-month-sales', this.formatRM(monthSales));
-        setMetric('metric-month-tx', `${monthTx} transaction${monthTx === 1 ? '' : 's'}`);
+        setMetric('metric-month-tx', `${monthTx} entr${monthTx === 1 ? 'y' : 'ies'}`);
 
         const activeVendors = this.vendors.filter(v => v.status === 'Active').length;
         setMetric('metric-total-vendors', String(this.vendors.length));
@@ -2629,10 +2589,8 @@
             <tr>
               <td data-label="Date"><b>${s.date}</b></td>
               <td data-label="Vendor">${s.vendorName}</td>
-              <td data-label="Item">${s.product}</td>
-              <td data-label="Qty">${s.qty}</td>
-              <td data-label="Total" style="font-weight:700; color:var(--primary);">${this.formatRM(s.total)}</td>
-              <td data-label="Payment"><span class="badge badge-method">${s.payment}</span></td>
+              <td data-label="Amount" style="font-weight:700; color:var(--primary);">${this.formatRM(this.getSaleAmount(s))}</td>
+              <td data-label="Remarks">${s.notes || '-'}</td>
             </tr>
           `).join('');
           this.staggerRows(recentTbody, 40);
@@ -2678,7 +2636,7 @@
           const dateStr = d.toISOString().split('T')[0];
           labels.push(d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
           dailyAmounts.push(this.sales.filter(s => s.date === dateStr)
-            .reduce((sum, s) => sum + (parseFloat(s.total) || 0), 0));
+            .reduce((sum, s) => sum + this.getSaleAmount(s), 0));
         }
 
         if (this.salesChartInstance) this.salesChartInstance.destroy();
@@ -2748,7 +2706,7 @@
 
         grid.innerHTML = filtered.map(v => {
           const totalEarned = this.sales.filter(s => s.vendorId === v.id)
-            .reduce((sum, s) => sum + (parseFloat(s.total) || 0), 0);
+            .reduce((sum, s) => sum + this.getSaleAmount(s), 0);
           return `
             <div class="glass-card" style="padding:14px; display:flex; flex-direction:column; justify-content:space-between; gap: 12px;">
               <div>
@@ -2792,19 +2750,20 @@
         document.getElementById('vd-contact').textContent = vendor.contact || '-';
 
         const vendorTx = this.sales.filter(s => s.vendorId === vendorId);
-        const totalSales = vendorTx.reduce((sum, s) => sum + (parseFloat(s.total) || 0), 0);
-        const totalQty = vendorTx.reduce((sum, s) => sum + (parseInt(s.qty) || 0), 0);
+        const totalSales = vendorTx.reduce((sum, s) => sum + this.getSaleAmount(s), 0);
+        const totalTx = vendorTx.length;
+        const avgSale = totalTx > 0 ? totalSales / totalTx : 0;
 
         const now = new Date();
         const monthSales = vendorTx.filter(s => {
           const d = new Date(s.date + 'T00:00:00');
           return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
-        }).reduce((sum, s) => sum + (parseFloat(s.total) || 0), 0);
+        }).reduce((sum, s) => sum + this.getSaleAmount(s), 0);
 
         document.getElementById('vd-total-sales').textContent = this.formatRM(totalSales);
         document.getElementById('vd-month-sales').textContent = this.formatRM(monthSales);
-        document.getElementById('vd-total-qty').textContent = `${totalQty} units`;
-        document.getElementById('vd-total-tx').textContent = vendorTx.length;
+        document.getElementById('vd-avg-sale').textContent = this.formatRM(avgSale);
+        document.getElementById('vd-total-tx').textContent = totalTx;
 
         const tbody = document.getElementById('vendor-sales-tbody');
         const empty = document.getElementById('vendor-sales-empty');
@@ -2818,11 +2777,8 @@
           tbody.innerHTML = sorted.map(s => `
             <tr>
               <td data-label="Date"><b>${s.date}</b></td>
-              <td data-label="Product">${s.product}</td>
-              <td data-label="Quantity">${s.qty}</td>
-              <td data-label="Unit Price">${this.formatRM(s.price)}</td>
-              <td data-label="Total Amount" style="font-weight:700; color:var(--primary);">${this.formatRM(s.total)}</td>
-              <td data-label="Payment"><span class="badge badge-method">${s.payment}</span></td>
+              <td data-label="Amount" style="font-weight:700; color:var(--primary);">${this.formatRM(this.getSaleAmount(s))}</td>
+              <td data-label="Remarks">${s.notes || '-'}</td>
               <td data-label="Actions">
                 <div style="display:flex; gap:6px;">
                   <button class="btn btn-secondary btn-icon" style="width:36px; height:36px; flex: 0 0 36px; font-size: 14px;" title="Edit" onclick="window.App.openSaleModal('${s.id}')">✏️</button>
@@ -2859,23 +2815,23 @@
           return d.getMonth() === selMonth && d.getFullYear() === selYear;
         });
 
-        const totalAmt = monthSales.reduce((sum, s) => sum + (parseFloat(s.total) || 0), 0);
-        const totalItems = monthSales.reduce((sum, s) => sum + (parseInt(s.qty) || 0), 0);
+        const totalAmt = monthSales.reduce((sum, s) => sum + this.getSaleAmount(s), 0);
+        const totalTx = monthSales.length;
+        const avgSale = totalTx > 0 ? totalAmt / totalTx : 0;
 
         const vendorAgg = {};
         monthSales.forEach(s => {
           if (!vendorAgg[s.vendorId]) {
-            vendorAgg[s.vendorId] = { name: s.vendorName, txCount: 0, qtyCount: 0, totalSum: 0 };
+            vendorAgg[s.vendorId] = { name: s.vendorName, txCount: 0, totalSum: 0 };
           }
           vendorAgg[s.vendorId].txCount++;
-          vendorAgg[s.vendorId].qtyCount += parseInt(s.qty) || 0;
-          vendorAgg[s.vendorId].totalSum += parseFloat(s.total) || 0;
+          vendorAgg[s.vendorId].totalSum += this.getSaleAmount(s);
         });
 
         document.getElementById('rep-total-sales').textContent = this.formatRM(totalAmt);
         document.getElementById('rep-total-vendors').textContent = Object.keys(vendorAgg).length;
-        document.getElementById('rep-total-tx').textContent = monthSales.length;
-        document.getElementById('rep-total-items').textContent = totalItems;
+        document.getElementById('rep-total-tx').textContent = totalTx;
+        document.getElementById('rep-avg-sale').textContent = this.formatRM(avgSale);
 
         const tbody = document.getElementById('report-breakdown-tbody');
         const rows = Object.keys(vendorAgg).map(vId => {
@@ -2887,7 +2843,6 @@
               <td data-label="Vendor Name"><b>${vData.name}</b></td>
               <td data-label="Location">${vendorObj ? vendorObj.location : '-'}</td>
               <td data-label="Transactions">${vData.txCount}</td>
-              <td data-label="Total Qty">${vData.qtyCount}</td>
               <td data-label="Total Sales" style="font-weight:700; color:var(--primary);">${this.formatRM(vData.totalSum)}</td>
               <td data-label="% of Month">${percent}%</td>
             </tr>
@@ -2895,7 +2850,7 @@
         });
 
         tbody.innerHTML = rows.length === 0
-          ? `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:18px;">No transactions recorded for the selected period.</td></tr>`
+          ? `<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:18px;">No transactions recorded for the selected period.</td></tr>`
           : rows.join('');
         if (rows.length > 0) this.staggerRows(tbody, 25);
       },
@@ -2907,7 +2862,6 @@
 
         const filtered = this.sales.filter(s => {
           const matchText = !textQuery ||
-            s.product.toLowerCase().includes(textQuery) ||
             (s.notes && s.notes.toLowerCase().includes(textQuery)) ||
             s.vendorName.toLowerCase().includes(textQuery);
           const matchVendor = !vendorFilter || s.vendorId === vendorFilter;
@@ -2928,11 +2882,8 @@
             <tr>
               <td data-label="Date"><b>${s.date}</b></td>
               <td data-label="Vendor">${s.vendorName}</td>
-              <td data-label="Product">${s.product}</td>
-              <td data-label="Qty">${s.qty}</td>
-              <td data-label="Unit Price">${this.formatRM(s.price)}</td>
-              <td data-label="Total" style="font-weight:700; color:var(--primary);">${this.formatRM(s.total)}</td>
-              <td data-label="Payment"><span class="badge badge-method">${s.payment}</span></td>
+              <td data-label="Amount" style="font-weight:700; color:var(--primary);">${this.formatRM(this.getSaleAmount(s))}</td>
+              <td data-label="Remarks">${s.notes || '-'}</td>
               <td data-label="Actions">
                 <div style="display:flex; gap:6px;">
                   <button class="btn btn-secondary btn-icon" style="width:36px; height:36px; flex: 0 0 36px; font-size: 14px;" title="Edit" onclick="window.App.openSaleModal('${s.id}')">✏️</button>
@@ -2974,20 +2925,15 @@
             document.getElementById('sale-edit-id').value = sale.id;
             document.getElementById('sale-vendor-id').value = sale.vendorId;
             document.getElementById('sale-date').value = sale.date;
-            document.getElementById('sale-product').value = sale.product;
-            document.getElementById('sale-qty').value = sale.qty;
-            document.getElementById('sale-price').value = sale.price;
-            document.getElementById('sale-payment').value = sale.payment;
+            document.getElementById('sale-amount').value = this.getSaleAmount(sale);
             document.getElementById('sale-notes').value = sale.notes || '';
-            document.getElementById('sale-calc-total').textContent = this.formatRM(sale.total);
           }
         } else {
           titleEl.textContent = 'Record Daily Sale';
           document.getElementById('sale-edit-id').value = '';
           document.getElementById('sale-date').value = new Date().toISOString().split('T')[0];
-          document.getElementById('sale-qty').value = '1';
-          document.getElementById('sale-price').value = '';
-          document.getElementById('sale-calc-total').textContent = 'RM 0.00';
+          document.getElementById('sale-amount').value = '';
+          document.getElementById('sale-notes').value = '';
           if (preselectedVendorId) document.getElementById('sale-vendor-id').value = preselectedVendorId;
         }
         this.openModal('sale-modal');
@@ -2997,35 +2943,37 @@
         const id = document.getElementById('sale-edit-id').value;
         const vendorId = document.getElementById('sale-vendor-id').value;
         const date = document.getElementById('sale-date').value;
-        const product = document.getElementById('sale-product').value.trim();
-        const qty = parseInt(document.getElementById('sale-qty').value, 10);
-        const price = parseFloat(document.getElementById('sale-price').value);
-        const payment = document.getElementById('sale-payment').value;
+        const amount = parseFloat(document.getElementById('sale-amount').value);
         const notes = document.getElementById('sale-notes').value.trim();
 
-        if (!vendorId || !date || !product || isNaN(qty) || qty <= 0 || isNaN(price) || price < 0) {
-          this.showToast('Please complete all required fields with valid values.', 'danger');
+        if (!vendorId || !date || isNaN(amount) || amount <= 0) {
+          this.showToast('Please fill in vendor, date, and a valid amount.', 'danger');
           return;
         }
 
         const vendor = this.vendors.find(v => v.id === vendorId);
-        const total = parseFloat((qty * price).toFixed(2));
 
         if (id) {
           const idx = this.sales.findIndex(s => s.id === id);
           if (idx !== -1) {
             this.sales[idx] = {
               ...this.sales[idx],
-              vendorId, vendorName: vendor ? vendor.name : 'Unknown Vendor',
-              date, product, qty, price, total, payment, notes
+              vendorId,
+              vendorName: vendor ? vendor.name : 'Unknown Vendor',
+              date,
+              amount,
+              notes
             };
             this.showToast('Sale record updated!', 'success');
           }
         } else {
           this.sales.unshift({
             id: 'TX-' + Date.now().toString().slice(-6),
-            vendorId, vendorName: vendor ? vendor.name : 'Unknown Vendor',
-            date, product, qty, price, total, payment, notes
+            vendorId,
+            vendorName: vendor ? vendor.name : 'Unknown Vendor',
+            date,
+            amount,
+            notes
           });
           this.showToast('Daily sale recorded successfully!', 'success');
         }
@@ -3170,8 +3118,9 @@
           return d.getMonth() === selMonth && d.getFullYear() === selYear;
         });
 
-        const totalSales = monthSales.reduce((acc, s) => acc + (parseFloat(s.total) || 0), 0);
-        const totalItems = monthSales.reduce((acc, s) => acc + (parseInt(s.qty) || 0), 0);
+        const totalSales = monthSales.reduce((acc, s) => acc + this.getSaleAmount(s), 0);
+        const totalTx = monthSales.length;
+        const avgSale = totalTx > 0 ? totalSales / totalTx : 0;
 
         doc.setFillColor(244, 63, 94);
         doc.rect(0, 0, 210, 36, 'F');
@@ -3189,14 +3138,14 @@
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
         doc.text(`Total Sales: RM ${totalSales.toFixed(2)}`, 20, 52);
-        doc.text(`Total Transactions: ${monthSales.length}`, 80, 52);
-        doc.text(`Items Sold: ${totalItems} units`, 140, 52);
+        doc.text(`Transactions: ${totalTx}`, 80, 52);
+        doc.text(`Average Sale: RM ${avgSale.toFixed(2)}`, 135, 52);
 
         const vendorAgg = {};
         monthSales.forEach(s => {
           if (!vendorAgg[s.vendorId]) vendorAgg[s.vendorId] = { name: s.vendorName, count: 0, total: 0 };
           vendorAgg[s.vendorId].count++;
-          vendorAgg[s.vendorId].total += parseFloat(s.total) || 0;
+          vendorAgg[s.vendorId].total += this.getSaleAmount(s);
         });
         const breakdownRows = Object.keys(vendorAgg).map(id => [
           vendorAgg[id].name, vendorAgg[id].count.toString(), `RM ${vendorAgg[id].total.toFixed(2)}`
@@ -3222,17 +3171,15 @@
         doc.text('2. Transaction Ledger', 14, detailStartY);
 
         const detailRows = monthSales.map(s => [
-          s.date, s.vendorName, s.product, s.qty.toString(),
-          `RM ${parseFloat(s.price).toFixed(2)}`,
-          `RM ${parseFloat(s.total).toFixed(2)}`, s.payment
+          s.date, s.vendorName, `RM ${this.getSaleAmount(s).toFixed(2)}`, s.notes || '-'
         ]);
 
         doc.autoTable({
           startY: detailStartY + 4,
-          head: [['Date', 'Vendor', 'Product', 'Qty', 'Unit Price', 'Total', 'Payment']],
-          body: detailRows.length > 0 ? detailRows : [['No transactions', '-', '-', '-', '-', '-', '-']],
+          head: [['Date', 'Vendor', 'Amount (RM)', 'Remarks']],
+          body: detailRows.length > 0 ? detailRows : [['No transactions', '-', '-', '-']],
           headStyles: { fillColor: [190, 18, 60], textColor: [255, 255, 255], fontStyle: 'bold' },
-          theme: 'striped', styles: { fontSize: 8 }
+          theme: 'striped', styles: { fontSize: 8.5 }
         });
 
         const filename = `MY-VENDOR-SALES-${periodTitle.replace(' ', '-')}.pdf`;
@@ -3251,8 +3198,7 @@
         const currentMonthName = now.toLocaleString('en-MY', { month: 'long', year: 'numeric' }).toUpperCase();
 
         const vendorSales = this.sales.filter(s => s.vendorId === vendorId);
-        const grandTotal = vendorSales.reduce((acc, s) => acc + (parseFloat(s.total) || 0), 0);
-        const grandQty = vendorSales.reduce((acc, s) => acc + (parseInt(s.qty) || 0), 0);
+        const grandTotal = vendorSales.reduce((acc, s) => acc + this.getSaleAmount(s), 0);
 
         doc.setFillColor(244, 63, 94);
         doc.rect(0, 0, 210, 36, 'F');
@@ -3273,20 +3219,18 @@
         doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
         doc.text(`Location: ${vendor.location}   |   Contact: ${vendor.contact || '-'}   |   Phone: ${vendor.phone || '-'}`, 20, 58);
-        doc.text(`Total Lifetime Volume: RM ${grandTotal.toFixed(2)} (${grandQty} units in ${vendorSales.length} deliveries)`, 20, 65);
+        doc.text(`Total Lifetime Volume: RM ${grandTotal.toFixed(2)} (${vendorSales.length} entries)`, 20, 65);
 
         const rows = vendorSales.map(s => [
-          s.date, s.product, s.qty.toString(),
-          `RM ${parseFloat(s.price).toFixed(2)}`,
-          `RM ${parseFloat(s.total).toFixed(2)}`, s.payment, s.notes || '-'
+          s.date, `RM ${this.getSaleAmount(s).toFixed(2)}`, s.notes || '-'
         ]);
 
         doc.autoTable({
           startY: 78,
-          head: [['Date', 'Product / Item', 'Qty', 'Unit Price', 'Total Amount', 'Payment', 'Notes']],
-          body: rows.length > 0 ? rows : [['No recorded sales', '-', '-', '-', '-', '-', '-']],
+          head: [['Date', 'Amount (RM)', 'Remarks']],
+          body: rows.length > 0 ? rows : [['No recorded sales', '-', '-']],
           headStyles: { fillColor: [244, 63, 94], textColor: [255, 255, 255], fontStyle: 'bold' },
-          theme: 'striped', styles: { fontSize: 8.5 }
+          theme: 'striped', styles: { fontSize: 9 }
         });
 
         const finalY = doc.lastAutoTable.finalY + 10;
@@ -3303,7 +3247,7 @@
 
       exportJSONBackup() {
         const payload = {
-          version: '3.3',
+          version: '3.4',
           exportedAt: new Date().toISOString(),
           settings: this.settings,
           vendors: this.vendors,
